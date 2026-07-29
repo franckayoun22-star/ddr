@@ -624,6 +624,17 @@ textarea{resize:vertical;}
       </div>
 
       <div class="subview" id="subview-sport">
+        <div class="card" style="border-color:var(--orange);margin-bottom:14px;">
+          <div class="card-title" style="color:var(--orange);">⚠️ À valider avec ton médecin</div>
+          <div style="font-size:12px;color:var(--dim);line-height:1.5;">Ce programme est conçu pour rester léger, mais compte tenu de ton hépatite auto-immune, de ta cirrhose et de ta prothèse de hanche : fais-le valider par ton hépatologue avant de commencer, évite tout mouvement qui provoque une douleur de hanche, et arrête la séance en cas de douleur inhabituelle, vertige ou fatigue marquée.</div>
+        </div>
+        <div class="card card-corner" style="margin-bottom:14px;">
+          <div class="card-title">🥋 Programme sport — 10 jours</div>
+          <div id="programme10-status"></div>
+          <div id="programme10-content"></div>
+          <div class="section-title">Objectifs quotidiens</div>
+          <div id="programme10-objectifs"></div>
+        </div>
         <div class="stats-row" id="sport-stats"></div>
         <button class="btn" id="btn-obj-add" style="margin-top:0;">＋ Nouvel objectif</button>
         <div class="dossier-list" id="obj-list" style="margin-top:14px;"></div>
@@ -734,6 +745,19 @@ const CRISIS_PLANS = {
   loisirs: ['J1-2 : caler un vrai moment loisir dans l’agenda (golf, lecture...).', 'J3-5 : reprendre un objectif sport laissé de côté.', 'J6-7 : essayer une nouvelle recette ou activité.'],
   developpement: ['J1-2 : reprendre une habitude abandonnée, même en petit format.', 'J3-5 : avancer une étape concrète d’un objectif personnel.', 'J6-7 : écrire une entrée de journal pour faire le point.']
 };
+const PROGRAMME_10_JOURS = [
+  { jour:1, titre:'Reprise en douceur', exercices:['Marche rapide : 20 min','Squat sur chaise : 3 × 10','Pompes contre un mur : 3 × 12','Gainage : 3 × 20 s'] },
+  { jour:2, titre:'Haut du corps léger', exercices:['Vélo tranquille : 30 min','Rowing avec deux bouteilles d’eau : 3 × 12','Développé épaules avec bouteilles : 3 × 12','Étirements : 10 min'] },
+  { jour:3, titre:'Marche + gainage', exercices:['Marche : 30 min','Fentes courtes assistées (si la hanche le permet) : 2 × 10','Curl biceps : 3 × 15','Gainage latéral : 2 × 20 s de chaque côté'] },
+  { jour:4, titre:'Repos actif', exercices:['Marche : 20 min','Étirements'] },
+  { jour:5, titre:'Renforcement général', exercices:['Squat sur chaise : 4 × 10','Pompes inclinées sur une table : 3 × 10','Tirage avec élastique ou serviette : 3 × 15','Gainage : 30 s × 3'] },
+  { jour:6, titre:'Cardio + gainage', exercices:['Vélo à allure facile : 40 min','Dead bug (abdominaux) : 3 × 10','Pont fessier : 3 × 12'] },
+  { jour:7, titre:'Repos actif', exercices:['Marche ou repos complet, comme senti'] },
+  { jour:8, titre:'Reprise Jour 1 progressif', exercices:['Marche rapide : 20 min','Squat sur chaise : 3 × 12 (+2 reps)','Pompes contre un mur : 3 × 14 (+2 reps)','Gainage : 3 × 20 s'] },
+  { jour:9, titre:'Reprise Jour 2, rythme soutenu', exercices:['Vélo, rythme légèrement plus soutenu : 30 min','Rowing avec bouteilles : 3 × 12','Développé épaules avec bouteilles : 3 × 12','Étirements : 10 min'] },
+  { jour:10, titre:'Circuit final', exercices:['Marche ou vélo : 45 min','Circuit ×3 : 10 squats chaise, 10 pompes mur, 15 curls, 15 développés épaules, 30 s gainage'] }
+];
+const PROGRAMME_OBJECTIFS_QUOTIDIENS = ['7 000 à 10 000 pas', '2 L d’eau (ou selon consignes médicales)', 'Au moins 7h30 de sommeil', 'Des protéines à chaque repas'];
 
 const DEFAULT_STATE = {
   candidatures: [], golfParties: [], recettes: [],
@@ -744,6 +768,7 @@ const DEFAULT_STATE = {
   rdvSante: [], poids: [], sommeil: [],
   habitudes: [], objectifsPerso: [], journalPerso: [],
   couplePoints: [], maisonTickets: [],
+  programme10: { startDate: null, done: {} },
   missionsConfig: JSON.parse(JSON.stringify(MISSIONS_DEFAULT)),
   missionsDone: {},
   journalPDG: [],
@@ -2275,6 +2300,70 @@ document.getElementById('livre-search').addEventListener('input', e=>{ livreRech
 /* --- Sport (objectifs) --- */
 function seancesCetteSemaine(o){ const monday = startOfWeekMonday(new Date()); return o.seances.filter(k=>new Date(k+'T12:00:00')>=monday).length; }
 function progValeurActuelle(o){ return o.historique.length ? o.historique[o.historique.length-1].valeur : (o.valeurDepart||0); }
+
+/* --- Programme sport 10 jours --- */
+function programme10CurrentDay(){
+  if(!state.programme10.startDate) return 0;
+  const diff = Math.floor((Date.now()-state.programme10.startDate)/(24*3600*1000));
+  return clamp(diff+1,1,10);
+}
+function renderProgramme10(){
+  const statusWrap = document.getElementById('programme10-status');
+  const contentWrap = document.getElementById('programme10-content');
+  const objWrap = document.getElementById('programme10-objectifs');
+  if(!state.programme10.startDate){
+    statusWrap.innerHTML = `<button class="btn" style="margin-top:0;" id="btn-programme10-start">🚀 Démarrer le programme (Jour 1)</button>`;
+    document.getElementById('btn-programme10-start').onclick = ()=>{
+      state.programme10.startDate = Date.now();
+      gainXp(5); journalPDGPush('🥋','Le PDG a démarré son programme sport 10 jours.');
+      save(); renderAll();
+    };
+    contentWrap.innerHTML = '';
+    objWrap.innerHTML = '';
+    return;
+  }
+  const day = programme10CurrentDay();
+  const totalDone = Object.values(state.programme10.done).filter(Boolean).length;
+  const totalEx = PROGRAMME_10_JOURS.reduce((s,j)=>s+j.exercices.length,0);
+  statusWrap.innerHTML = `
+    <div class="stats-row" style="margin-bottom:12px;">
+      <div class="stat-card"><div class="stat-num">${Math.min(day,10)}/10</div><div class="stat-label">Jour du programme</div></div>
+      <div class="stat-card"><div class="stat-num">${totalDone}/${totalEx}</div><div class="stat-label">Exercices faits</div></div>
+    </div>
+    <button class="btn ghost small" id="btn-programme10-reset" style="margin-top:0;">Recommencer le programme</button>
+  `;
+  document.getElementById('btn-programme10-reset').onclick = ()=>{
+    if(!confirm('Recommencer le programme depuis le Jour 1 ?')) return;
+    state.programme10 = { startDate: Date.now(), done: {} };
+    save(); renderAll();
+  };
+  contentWrap.innerHTML = PROGRAMME_10_JOURS.map(j=>{
+    const isToday = j.jour===day;
+    const isPast = j.jour<day;
+    return `
+      <div class="cat-card" style="${isToday?'border-color:var(--cyan);':''}">
+        <div class="cat-top"><span>${isToday?'👉 ':''}Jour ${j.jour} — ${escapeHtml(j.titre)}</span>${isPast?'<span class="cat-sub" style="color:var(--green);">terminé</span>':''}</div>
+        ${j.exercices.map((ex,i)=>{
+          const key = `${j.jour}-${i}`;
+          const done = !!state.programme10.done[key];
+          return `<div class="etape-row"><button class="etape-check ${done?'done':''}" data-key="${key}">${done?'✓':''}</button><span class="etape-text ${done?'done':''}">${escapeHtml(ex)}</span></div>`;
+        }).join('')}
+      </div>
+    `;
+  }).join('');
+  contentWrap.querySelectorAll('.etape-check').forEach(btn=>{
+    btn.onclick = ()=>{
+      const key = btn.dataset.key;
+      const [jourNum, exIdx] = key.split('-').map(Number);
+      const jourDef = PROGRAMME_10_JOURS.find(j=>j.jour===jourNum);
+      const wasDone = !!state.programme10.done[key];
+      state.programme10.done[key] = !wasDone;
+      if(!wasDone){ gainXp(4); journalPDGPush('💪', `Jour ${jourNum} — ${jourDef.exercices[exIdx]} : fait !`); }
+      save(); renderAll();
+    };
+  });
+  objWrap.innerHTML = PROGRAMME_OBJECTIFS_QUOTIDIENS.map(o=>`<div class="mini-list-item"><span>✓ ${escapeHtml(o)}</span></div>`).join('');
+}
 function renderSportStats(){
   const wrap = document.getElementById('sport-stats');
   const actifs = state.objectifsSport.filter(o=>o.statut!=='atteint' && o.statut!=='abandonne');
@@ -2700,7 +2789,7 @@ function renderAll(){
   renderBudgetStats(); renderCatList(); renderTxFilters(); renderTxList();
   renderMaisonStats(); renderTicketFilters(); renderTicketList();
   renderGolfStats(); renderGolfList(); renderWeekPlan(); renderRecetteFilters(); renderRecetteList();
-  renderLivreStats(); renderLivreFilters(); renderLivreList(); renderSportStats(); renderObjSportList();
+  renderLivreStats(); renderLivreFilters(); renderLivreList(); renderProgramme10(); renderSportStats(); renderObjSportList();
   renderHabitList(); renderObjPersoList(); renderJournalPersoDept();
   renderJobStats(); renderJobFilters(); renderJobList();
 }
