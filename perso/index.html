@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Espace Perso</title>
+<style>
+:root{
+  --bg:#000000;
+  --bg-2:#0D0D10;
+  --glass:#131316;
+  --glass-hi:#1C1C21;
+  --border:rgba(255,255,255,0.10);
+  --blue:#6699FF;
+  --blue-glow:rgba(102,153,255,0.35);
+  --amber:#FF9966;
+  --amber-glow:rgba(255,153,102,0.4);
+  --turq:#CC99FF;
+  --off:#F5F0E6;
+  --dim:#9D9DB8;
+  --dim-2:#5C5C74;
+  --orange:#FFCC66;
+  --red:#FF6666;
+  --green:#66FFCC;
+  --radius:26px;
+  --radius-sm:20px;
+  --shadow:0 2px 10px rgba(0,0,0,0.5);
+  --mono:'Consolas','SF Mono','JetBrains Mono',ui-monospace,Menlo,monospace;
+  --display:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1100px 600px at 12% -8%, rgba(255,167,38,0.08), transparent 60%),
+    radial-gradient(900px 550px at 105% 5%, rgba(45,212,191,0.06), transparent 55%),
+    var(--bg);
+  color:var(--off);
+  font-family:var(--sans);
+  min-height:100vh;
+  overflow-x:hidden;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--amber-glow);}
+button{font-family:inherit;}
+.app{max-width:560px;margin:0 auto;padding:22px 16px 100px;min-height:100vh;position:relative;}
+
+.header{position:relative;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;padding:10px 14px 20px;}
+.header::after{content:'';position:absolute;left:14px;right:14px;bottom:0;height:8px;background:linear-gradient(90deg,var(--amber),var(--turq) 60%,transparent);border-radius:0 0 0 999px;}
+.hello{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-0.01em;}
+.hello span{color:var(--dim);font-weight:500;}
+.date{font-family:var(--mono);font-size:11px;color:var(--dim-2);text-transform:uppercase;letter-spacing:0.08em;margin-top:5px;}
+.brand{
+  font-family:var(--mono);font-size:10px;letter-spacing:0.18em;color:var(--dim-2);
+  text-transform:uppercase;border:1px solid var(--border);border-radius:20px;
+  padding:6px 10px;white-space:nowrap;
+}
+.brand b{color:var(--amber);}
+
+.view{display:none;animation:fadein .35s ease;}
+.view.active{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.section-title{font-family:var(--display);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin:18px 0 10px;font-weight:700;}
+.section-title:first-child{margin-top:0;}
+
+.card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.stat-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 6px;text-align:center;box-shadow:var(--shadow);}
+.stat-num{font-family:var(--mono);font-size:19px;font-weight:700;}
+.stat-label{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.03em;margin-top:3px;}
+
+.toolbar-inline{display:flex;gap:8px;margin-bottom:10px;}
+.inline-input{flex:1;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--off);padding:11px 14px;font-size:13.5px;font-family:inherit;}
+.inline-input::placeholder{color:var(--dim-2);}
+.inline-add{background:linear-gradient(135deg,var(--amber),var(--turq));border:none;color:#0A0D12;font-weight:700;font-size:18px;width:44px;border-radius:var(--radius-sm);cursor:pointer;flex-shrink:0;}
+
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.filter-chip{background:var(--glass);border:1px solid var(--border);border-radius:999px;padding:8px 14px;font-size:12px;color:var(--dim);cursor:pointer;white-space:nowrap;}
+.filter-chip.active{border-color:var(--amber);background:rgba(255,153,102,0.14);color:var(--amber);}
+
+.dossier-list{display:flex;flex-direction:column;gap:9px;}
+.dossier-card{background:var(--glass);border:1px solid var(--border);border-left:3px solid var(--dim-2);border-radius:var(--radius-sm);padding:13px 15px;cursor:pointer;box-shadow:var(--shadow);}
+.dossier-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;}
+.dossier-client{font-family:var(--display);font-size:14px;font-weight:700;}
+.dossier-badge{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;padding:3px 9px;border-radius:10px;background:var(--bg-2);color:var(--dim);white-space:nowrap;}
+.dossier-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);}
+.dossier-days{font-family:var(--mono);}
+.dossier-days.danger{color:var(--red);font-weight:700;}
+.dossier-days.warn{color:var(--orange);font-weight:700;}
+
+.empty-state{text-align:center;color:var(--dim-2);font-size:13px;padding:30px 10px;font-style:italic;}
+
+.field-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin:14px 0 6px;}
+input[type=text], input[type=number], input[type=date], input[type=url], textarea, select.select-native{
+  width:100%;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--off);padding:11px 14px;font-size:14px;font-family:inherit;
+}
+textarea{resize:vertical;}
+.status-grid{display:grid;gap:8px;}
+.status-opt{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--dim);}
+.status-opt.active{color:#0A0D12;font-weight:700;background:var(--amber);border-color:var(--amber);}
+
+.btn{width:100%;background:linear-gradient(135deg,var(--amber),var(--turq));border:none;color:#0A0D12;font-weight:700;font-size:14px;padding:13px;border-radius:var(--radius-sm);cursor:pointer;margin-top:16px;letter-spacing:0.01em;}
+.btn:active{transform:scale(0.98);}
+.btn.ghost{background:var(--glass);border:1px solid var(--border);color:var(--off);}
+.btn.danger{background:none;border:1px solid var(--red);color:var(--red);}
+
+.note-item{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-top:8px;box-shadow:var(--shadow);}
+.note-date{font-family:var(--mono);font-size:10px;color:var(--dim-2);text-transform:uppercase;margin-bottom:4px;}
+.note-text{font-size:13.5px;line-height:1.4;}
+.note-empty{font-size:12.5px;color:var(--dim-2);font-style:italic;padding:6px 0;}
+
+/* PANEL */
+.panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:90;align-items:flex-end;}
+.panel-overlay.active{display:flex;}
+.panel{background:var(--bg-2);border-top-left-radius:24px;border-top-right-radius:24px;width:100%;max-height:88vh;overflow-y:auto;padding:14px 20px 34px;box-shadow:0 -8px 30px rgba(0,0,0,0.5);}
+.panel-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
+.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.panel-title{font-family:var(--display);font-size:17px;font-weight:700;}
+.panel-close{background:var(--glass);border:1px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--dim);cursor:pointer;font-size:14px;}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(to top, var(--bg) 55%, transparent);pointer-events:none;}
+.nav-inner{pointer-events:auto;display:flex;gap:5px;background:var(--bg-2);border:1px solid var(--border);border-radius:999px;padding:6px;max-width:460px;width:100%;box-shadow:var(--shadow);}
+.nav-btn{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;background:var(--glass);border:none;border-radius:999px;color:var(--dim);cursor:pointer;transition:all .2s;}
+.nav-btn.active{color:#000;font-weight:800;}
+.nav-btn:nth-child(1).active{background:var(--amber);}
+.nav-btn:nth-child(2).active{background:var(--turq);}
+.nav-btn:nth-child(3).active{background:var(--blue);}
+.nav-btn:nth-child(4).active{background:var(--orange);}
+.nav-icon{font-size:17px;}
+.nav-txt{font-size:9.5px;text-transform:uppercase;letter-spacing:0.04em;}
+
+/* JOB SEARCH SPECIFIC */
+.job-status-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+
+/* CUISINE */
+.week-plan{display:flex;flex-direction:column;gap:7px;margin-bottom:6px;}
+.week-day-row{display:flex;align-items:center;gap:10px;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;box-shadow:var(--shadow);}
+.week-day-label{font-family:var(--mono);font-size:10.5px;color:var(--dim);text-transform:uppercase;width:38px;flex-shrink:0;}
+.week-day-select{flex:1;background:none;border:none;color:var(--off);font-size:13.5px;font-family:inherit;}
+.week-day-select:invalid, .week-day-select option[value=""]{color:var(--dim-2);}
+.shopping-box{background:var(--glass);border:1px solid var(--amber);border-radius:var(--radius);padding:16px;margin-top:12px;box-shadow:var(--shadow);}
+.shopping-item{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border);}
+.shopping-item:last-child{border-bottom:none;}
+.recipe-stars{color:var(--amber);letter-spacing:1px;}
+.link-out{display:inline-block;margin-top:6px;font-size:11.5px;color:var(--blue);text-decoration:none;word-break:break-all;}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <div>
+      <div class="hello">Espace <span>Perso</span></div>
+      <div class="date" id="today-date">—</div>
+    </div>
+    <div class="brand">FRANCK <b>PERSO</b></div>
+  </div>
+
+  <!-- ============ VUE EMPLOI ============ -->
+  <div class="view active" id="view-emploi">
+    <div class="section-title">Recherche d'emploi</div>
+    <div class="stats-row" id="job-stats"></div>
+    <div class="toolbar-inline">
+      <input type="text" class="inline-input" id="job-search" placeholder="Rechercher une candidature...">
+      <button class="inline-add" id="btn-job-add">+</button>
+    </div>
+    <div class="filter-row" id="job-filter-row"></div>
+    <div class="dossier-list" id="job-list"></div>
+  </div>
+
+  <!-- ============ VUE GOLF ============ -->
+  <div class="view" id="view-golf">
+    <div class="section-title">Golf</div>
+    <div class="stats-row" id="golf-stats"></div>
+    <button class="btn" id="btn-golf-add" style="margin-top:0;">＋ Nouvelle partie</button>
+    <div class="section-title">Historique</div>
+    <div class="dossier-list" id="golf-list"></div>
+  </div>
+
+  <!-- ============ VUE CUISINE ============ -->
+  <div class="view" id="view-cuisine">
+    <div class="section-title">Planning de la semaine</div>
+    <div class="week-plan" id="week-plan"></div>
+    <button class="btn ghost" id="btn-shopping-list" style="margin-top:10px;">🛒 Générer la liste de courses</button>
+    <div id="shopping-list-output" style="display:none;"></div>
+
+    <div class="section-title">Mes recettes</div>
+    <div class="toolbar-inline">
+      <input type="text" class="inline-input" id="recette-search" placeholder="Rechercher une recette...">
+      <button class="inline-add" id="btn-recette-add">+</button>
+    </div>
+    <div class="filter-row" id="recette-filter-row"></div>
+    <div class="dossier-list" id="recette-list"></div>
+  </div>
+
+  <!-- ============ VUE LECTURE ============ -->
+  <div class="view" id="view-lecture">
+    <div class="section-title">Lecture</div>
+    <div class="stats-row" id="livre-stats"></div>
+    <div class="toolbar-inline">
+      <input type="text" class="inline-input" id="livre-search" placeholder="Rechercher un livre...">
+      <button class="inline-add" id="btn-livre-add">+</button>
+    </div>
+    <div class="filter-row" id="livre-filter-row"></div>
+    <div class="dossier-list" id="livre-list"></div>
+  </div>
+
+</div>
+
+<!-- PANEL FICHE -->
+<div class="panel-overlay" id="panel-overlay">
+  <div class="panel" id="panel-content"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-view="emploi"><span class="nav-icon">💼</span><span class="nav-txt">Emploi</span></button>
+    <button class="nav-btn" data-view="golf"><span class="nav-icon">⛳</span><span class="nav-txt">Golf</span></button>
+    <button class="nav-btn" data-view="cuisine"><span class="nav-icon">🍳</span><span class="nav-txt">Cuisine</span></button>
+    <button class="nav-btn" data-view="lecture"><span class="nav-icon">📚</span><span class="nav-txt">Lecture</span></button>
+  </div>
+</div>
+
+<script>
+(function(){
+
+const STORAGE_KEY = 'perso_v1';
+const DEFAULT_STATE = {
+  candidatures: [
+    { id:'c1', entreprise:'Adidas', poste:'Senior District Manager Franchise', statut:'postule', dateCandidature: Date.now()-20*86400000, dateRelance:null, lien:'', notes:[] },
+    { id:'c2', entreprise:'Rituals', poste:'Responsable de secteur', statut:'postule', dateCandidature: Date.now()-14*86400000, dateRelance:null, lien:'', notes:[] }
+  ],
+  golfParties: [],
+  recettes: [],
+  planningSemaine: { lundi:null, mardi:null, mercredi:null, jeudi:null, vendredi:null, samedi:null, dimanche:null },
+  livres: []
+};
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+    if(!parsed.candidatures) parsed.candidatures = [];
+    parsed.candidatures.forEach(c=>{ if(!c.notes) c.notes=[]; if(c.dateRelance===undefined) c.dateRelance=null; if(c.lien===undefined) c.lien=''; });
+    if(!parsed.golfParties) parsed.golfParties = [];
+    if(!parsed.recettes) parsed.recettes = [];
+    if(!parsed.planningSemaine) parsed.planningSemaine = structuredClone(DEFAULT_STATE.planningSemaine);
+    if(!parsed.livres) parsed.livres = [];
+    return parsed;
+  }catch(e){ return structuredClone(DEFAULT_STATE); }
+}
+let state = load();
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function closePanel(){ document.getElementById('panel-overlay').classList.remove('active'); }
+
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+/* ---------- NAV ---------- */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  };
+});
+
+/* ---------- SUIVI RECHERCHE D'EMPLOI ---------- */
+const JOB_STATUTS = [
+  { key:'a_postuler', label:'À postuler', cls:'st-a-postuler' },
+  { key:'postule', label:'Postulé', cls:'st-postule' },
+  { key:'entretien', label:'Entretien prévu', cls:'st-entretien' },
+  { key:'attente', label:'En attente', cls:'st-attente' },
+  { key:'offre', label:'Offre reçue', cls:'st-offre' },
+  { key:'refuse', label:'Refusé', cls:'st-refuse' }
+];
+function jobStatutColor(key){
+  return { a_postuler:'var(--dim-2)', postule:'var(--blue)', entretien:'var(--amber)', attente:'var(--orange)', offre:'var(--green)', refuse:'var(--red)' }[key] || 'var(--dim-2)';
+}
+let jobFiltre = 'actives';
+let jobRecherche = '';
+function joursDepuis(ts){ return Math.floor((Date.now()-ts)/(24*3600*1000)); }
+function filteredJobs(){
+  let list = state.candidatures;
+  if(jobFiltre==='actives') list = list.filter(c=>c.statut!=='refuse');
+  else if(jobFiltre==='relance') list = list.filter(c=>c.dateRelance && c.dateRelance<=Date.now() && c.statut!=='refuse' && c.statut!=='offre');
+  else if(jobFiltre!=='tous') list = list.filter(c=>c.statut===jobFiltre);
+  if(jobRecherche.trim()){
+    const q = jobRecherche.trim().toLowerCase();
+    list = list.filter(c=>c.entreprise.toLowerCase().includes(q) || c.poste.toLowerCase().includes(q));
+  }
+  return list.slice().sort((a,b)=>b.dateCandidature-a.dateCandidature);
+}
+function renderJobStats(){
+  const wrap = document.getElementById('job-stats');
+  const actives = state.candidatures.filter(c=>c.statut!=='refuse');
+  const entretiens = state.candidatures.filter(c=>c.statut==='entretien').length;
+  const relances = state.candidatures.filter(c=>c.dateRelance && c.dateRelance<=Date.now() && c.statut!=='refuse' && c.statut!=='offre').length;
+  const items = [
+    { n: actives.length, l:'Actives' },
+    { n: entretiens, l:'Entretiens' },
+    { n: relances, l:'À relancer' },
+    { n: state.candidatures.length, l:'Total' }
+  ];
+  wrap.innerHTML = items.map(i=>`<div class="stat-card"><div class="stat-num">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+}
+function renderJobFilters(){
+  const wrap = document.getElementById('job-filter-row');
+  const chips = [
+    {key:'actives', label:'Actives'},
+    {key:'relance', label:'⏳ À relancer'},
+    {key:'entretien', label:'Entretiens'},
+    {key:'offre', label:'Offres'},
+    {key:'refuse', label:'Refusées'},
+    {key:'tous', label:'Toutes'}
+  ];
+  wrap.innerHTML = '';
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'filter-chip' + (jobFiltre===c.key?' active':'');
+    b.textContent = c.label;
+    b.onclick = ()=>{ jobFiltre=c.key; renderJobList(); renderJobFilters(); };
+    wrap.appendChild(b);
+  });
+}
+function renderJobList(){
+  const wrap = document.getElementById('job-list');
+  const list = filteredJobs();
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-state">Aucune candidature ici. Touche + pour en ajouter une.</div>`;
+    return;
+  }
+  wrap.innerHTML = '';
+  list.forEach(c=>{
+    const st = JOB_STATUTS.find(s=>s.key===c.statut) || JOB_STATUTS[0];
+    const jours = joursDepuis(c.dateCandidature);
+    const relanceDue = c.dateRelance && c.dateRelance<=Date.now() && c.statut!=='refuse' && c.statut!=='offre';
+    const el = document.createElement('div');
+    el.className = 'dossier-card';
+    el.style.borderLeftColor = jobStatutColor(c.statut);
+    el.innerHTML = `
+      <div class="dossier-top">
+        <span class="dossier-client">${escapeHtml(c.entreprise)}</span>
+        <span class="dossier-badge">${st.label}</span>
+      </div>
+      <div class="dossier-meta">
+        <span>${escapeHtml(c.poste)}</span>
+        <span class="dossier-days">${jours}j</span>
+        ${relanceDue ? `<span class="dossier-days danger">⚠ à relancer</span>` : ''}
+      </div>
+    `;
+    el.onclick = ()=> openJobPanel(c.id);
+    wrap.appendChild(el);
+  });
+}
+function openJobPanel(id){
+  const isNew = !id;
+  const c = isNew
+    ? { id: uid(), entreprise:'', poste:'', statut:'a_postuler', dateCandidature: Date.now(), dateRelance:null, lien:'', notes:[] }
+    : state.candidatures.find(x=>x.id===id);
+
+  const overlay = document.getElementById('panel-overlay');
+  const panel = document.getElementById('panel-content');
+  panel.innerHTML = `
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+      <div class="panel-title">${isNew?'Nouvelle candidature':'Candidature'}</div>
+      <button class="panel-close" id="panel-close">✕</button>
+    </div>
+
+    <div class="field-label" style="margin-top:0;">Entreprise</div>
+    <input type="text" id="jf-entreprise" value="${escapeHtml(c.entreprise)}" placeholder="Ex : Adidas">
+
+    <div class="field-label">Poste</div>
+    <input type="text" id="jf-poste" value="${escapeHtml(c.poste)}" placeholder="Ex : Responsable de secteur">
+
+    <div class="field-label">Date de candidature</div>
+    <input type="date" id="jf-date" value="${new Date(c.dateCandidature).toISOString().slice(0,10)}">
+
+    <div class="field-label">Statut</div>
+    <div class="status-grid job-status-row" id="jf-statut-grid"></div>
+
+    <div class="field-label">Date de relance prévue (optionnel)</div>
+    <input type="date" id="jf-relance" value="${c.dateRelance?new Date(c.dateRelance).toISOString().slice(0,10):''}">
+
+    <div class="field-label">Lien de l'annonce (optionnel)</div>
+    <input type="url" id="jf-lien" value="${escapeHtml(c.lien)}" placeholder="https://...">
+    ${!isNew && c.lien ? `<a href="${escapeHtml(c.lien)}" target="_blank" class="link-out">🔗 Ouvrir l'annonce</a>` : ''}
+
+    <div class="field-label">Ajouter une note</div>
+    <textarea id="jf-note" rows="2" placeholder="Ex : entretien avec le RH prévu jeudi..."></textarea>
+
+    ${!isNew ? `<div class="field-label" style="margin-top:18px;">Historique</div><div id="jf-notes-history"></div>` : ''}
+
+    <button class="btn" id="btn-jf-save">${isNew?'Créer la candidature':'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn danger" id="btn-jf-delete">Supprimer cette candidature</button>` : ''}
+  `;
+
+  let statutChoisi = c.statut;
+  const statutGrid = panel.querySelector('#jf-statut-grid');
+  JOB_STATUTS.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + (statutChoisi===s.key?' active':'');
+    b.textContent = s.label;
+    b.onclick = ()=>{
+      statutChoisi = s.key;
+      statutGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    };
+    statutGrid.appendChild(b);
+  });
+
+  if(!isNew){
+    const hist = panel.querySelector('#jf-notes-history');
+    hist.innerHTML = c.notes.length ? c.notes.slice().reverse().map(n=>`<div class="note-item"><div class="note-date">${n.date}</div><div class="note-text">${escapeHtml(n.text)}</div></div>`).join('') : `<div class="note-empty">Aucune note.</div>`;
+  }
+
+  panel.querySelector('#btn-jf-save').onclick = ()=>{
+    const entreprise = panel.querySelector('#jf-entreprise').value.trim();
+    const poste = panel.querySelector('#jf-poste').value.trim();
+    if(!entreprise || !poste){ alert('Entreprise et poste sont requis.'); return; }
+    c.entreprise = entreprise;
+    c.poste = poste;
+    const dateVal = panel.querySelector('#jf-date').value;
+    c.dateCandidature = dateVal ? new Date(dateVal+'T12:00:00').getTime() : Date.now();
+    c.statut = statutChoisi;
+    const relanceVal = panel.querySelector('#jf-relance').value;
+    c.dateRelance = relanceVal ? new Date(relanceVal+'T12:00:00').getTime() : null;
+    c.lien = panel.querySelector('#jf-lien').value.trim();
+    const noteText = panel.querySelector('#jf-note').value.trim();
+    if(noteText) c.notes.push({ date: new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), text: noteText });
+    if(isNew) state.candidatures.push(c);
+    save();
+    closePanel();
+    renderJobStats(); renderJobFilters(); renderJobList();
+  };
+  if(!isNew){
+    panel.querySelector('#btn-jf-delete').onclick = ()=>{
+      if(!confirm(`Supprimer la candidature ${c.entreprise} ?`)) return;
+      state.candidatures = state.candidatures.filter(x=>x.id!==id);
+      save();
+      closePanel();
+      renderJobStats(); renderJobFilters(); renderJobList();
+    };
+  }
+  panel.querySelector('#panel-close').onclick = closePanel;
+  overlay.classList.add('active');
+}
+document.getElementById('btn-job-add').onclick = ()=> openJobPanel(null);
+document.getElementById('job-search').addEventListener('input', e=>{ jobRecherche=e.target.value; renderJobList(); });
+document.getElementById('panel-overlay').addEventListener('click', e=>{ if(e.target.id==='panel-overlay') closePanel(); });
+
+/* ---------- GOLF ---------- */
+function renderGolfStats(){
+  const wrap = document.getElementById('golf-stats');
+  const parties = state.golfParties;
+  let items;
+  if(parties.length===0){
+    items = [{n:0,l:'Parties'},{n:'—',l:'Meilleur diff.'},{n:'—',l:'Diff. moyen'},{n:'—',l:'Dernière'}];
+  } else {
+    const diffs = parties.map(p=>p.score-p.par);
+    const best = Math.min(...diffs);
+    const avg = Math.round(diffs.reduce((a,b)=>a+b,0)/diffs.length);
+    const derniere = parties.slice().sort((a,b)=>b.date-a.date)[0];
+    items = [
+      { n: parties.length, l:'Parties' },
+      { n: (best>0?'+':'')+best, l:'Meilleur diff.' },
+      { n: (avg>0?'+':'')+avg, l:'Diff. moyen' },
+      { n: new Date(derniere.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}), l:'Dernière' }
+    ];
+  }
+  wrap.innerHTML = items.map(i=>`<div class="stat-card"><div class="stat-num" style="font-size:16px;">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+}
+function renderGolfList(){
+  const wrap = document.getElementById('golf-list');
+  const list = state.golfParties.slice().sort((a,b)=>b.date-a.date);
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-state">Aucune partie enregistrée. Touche "Nouvelle partie" pour commencer.</div>`;
+    return;
+  }
+  wrap.innerHTML = '';
+  list.forEach(p=>{
+    const diff = p.score-p.par;
+    const el = document.createElement('div');
+    el.className = 'dossier-card';
+    el.style.borderLeftColor = diff<=0 ? 'var(--green)' : diff<=5 ? 'var(--orange)' : 'var(--red)';
+    el.innerHTML = `
+      <div class="dossier-top">
+        <span class="dossier-client">${escapeHtml(p.parcours)}</span>
+        <span class="dossier-badge">${p.trous} trous</span>
+      </div>
+      <div class="dossier-meta">
+        <span>${new Date(p.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}</span>
+        <span>Score : ${p.score} (par ${p.par})</span>
+        <span class="dossier-days ${diff>5?'danger':diff>0?'warn':''}">${diff>0?'+':''}${diff}</span>
+      </div>
+    `;
+    el.onclick = ()=> openGolfPanel(p.id);
+    wrap.appendChild(el);
+  });
+}
+function openGolfPanel(id){
+  const isNew = !id;
+  const p = isNew
+    ? { id: uid(), date: Date.now(), parcours:'', trous:18, score:'', par:72, notes:[] }
+    : state.golfParties.find(x=>x.id===id);
+
+  const overlay = document.getElementById('panel-overlay');
+  const panel = document.getElementById('panel-content');
+  panel.innerHTML = `
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+      <div class="panel-title">${isNew?'Nouvelle partie':'Partie'}</div>
+      <button class="panel-close" id="panel-close">✕</button>
+    </div>
+
+    <div class="field-label" style="margin-top:0;">Parcours</div>
+    <input type="text" id="gf-parcours" value="${escapeHtml(p.parcours)}" placeholder="Ex : Golf de Fontainebleau">
+
+    <div class="field-label">Date</div>
+    <input type="date" id="gf-date" value="${new Date(p.date).toISOString().slice(0,10)}">
+
+    <div class="field-label">Nombre de trous</div>
+    <div class="status-grid" id="gf-trous-grid" style="grid-template-columns:1fr 1fr;"></div>
+
+    <div class="field-label">Par du parcours</div>
+    <input type="number" id="gf-par" value="${p.par}">
+
+    <div class="field-label">Score total</div>
+    <input type="number" id="gf-score" value="${p.score}">
+
+    <div class="field-label">Ajouter une note</div>
+    <textarea id="gf-note" rows="2" placeholder="Ex : vent fort sur le 14, bon parcours au putting..."></textarea>
+
+    ${!isNew ? `<div class="field-label" style="margin-top:18px;">Historique</div><div id="gf-notes-history"></div>` : ''}
+
+    <button class="btn" id="btn-gf-save">${isNew?'Enregistrer la partie':'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn danger" id="btn-gf-delete">Supprimer cette partie</button>` : ''}
+  `;
+
+  let trousChoisi = p.trous;
+  const trousGrid = panel.querySelector('#gf-trous-grid');
+  [9,18].forEach(n=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + (trousChoisi===n?' active':'');
+    b.textContent = n+' trous';
+    b.onclick = ()=>{ trousChoisi=n; trousGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+    trousGrid.appendChild(b);
+  });
+
+  if(!isNew){
+    const hist = panel.querySelector('#gf-notes-history');
+    hist.innerHTML = p.notes.length ? p.notes.slice().reverse().map(n=>`<div class="note-item"><div class="note-date">${n.date}</div><div class="note-text">${escapeHtml(n.text)}</div></div>`).join('') : `<div class="note-empty">Aucune note.</div>`;
+  }
+
+  panel.querySelector('#btn-gf-save').onclick = ()=>{
+    const parcours = panel.querySelector('#gf-parcours').value.trim();
+    const score = Number(panel.querySelector('#gf-score').value);
+    if(!parcours || !score){ alert('Le parcours et le score sont requis.'); return; }
+    p.parcours = parcours;
+    const dateVal = panel.querySelector('#gf-date').value;
+    p.date = dateVal ? new Date(dateVal+'T12:00:00').getTime() : Date.now();
+    p.trous = trousChoisi;
+    p.par = Number(panel.querySelector('#gf-par').value) || 72;
+    p.score = score;
+    const noteText = panel.querySelector('#gf-note').value.trim();
+    if(noteText) p.notes.push({ date: new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), text: noteText });
+    if(isNew) state.golfParties.push(p);
+    save();
+    closePanel();
+    renderGolfStats(); renderGolfList();
+  };
+  if(!isNew){
+    panel.querySelector('#btn-gf-delete').onclick = ()=>{
+      if(!confirm(`Supprimer cette partie du ${p.parcours} ?`)) return;
+      state.golfParties = state.golfParties.filter(x=>x.id!==id);
+      save();
+      closePanel();
+      renderGolfStats(); renderGolfList();
+    };
+  }
+  panel.querySelector('#panel-close').onclick = closePanel;
+  overlay.classList.add('active');
+}
+document.getElementById('btn-golf-add').onclick = ()=> openGolfPanel(null);
+
+/* ---------- CUISINE ---------- */
+const RECETTE_CATEGORIES = ['Entrée','Plat','Dessert','Autre'];
+const JOURS_SEMAINE_CUISINE = [['lundi','Lun'],['mardi','Mar'],['mercredi','Mer'],['jeudi','Jeu'],['vendredi','Ven'],['samedi','Sam'],['dimanche','Dim']];
+let recetteFiltre = 'toutes';
+let recetteRecherche = '';
+
+function renderWeekPlan(){
+  const wrap = document.getElementById('week-plan');
+  wrap.innerHTML = '';
+  JOURS_SEMAINE_CUISINE.forEach(([key,label])=>{
+    const row = document.createElement('div');
+    row.className = 'week-day-row';
+    const currentId = state.planningSemaine[key];
+    row.innerHTML = `
+      <span class="week-day-label">${label}</span>
+      <select class="week-day-select" data-day="${key}">
+        <option value="">—</option>
+        ${state.recettes.map(r=>`<option value="${r.id}" ${currentId===r.id?'selected':''}>${escapeHtml(r.titre)}</option>`).join('')}
+      </select>
+    `;
+    row.querySelector('select').addEventListener('change', e=>{
+      state.planningSemaine[key] = e.target.value || null;
+      save();
+    });
+    wrap.appendChild(row);
+  });
+}
+document.getElementById('btn-shopping-list').onclick = ()=>{
+  const output = document.getElementById('shopping-list-output');
+  const parts = [];
+  JOURS_SEMAINE_CUISINE.forEach(([key,label])=>{
+    const rid = state.planningSemaine[key];
+    if(!rid) return;
+    const r = state.recettes.find(x=>x.id===rid);
+    if(!r) return;
+    parts.push({ jour:label, recette:r });
+  });
+  if(parts.length===0){
+    output.innerHTML = `<div class="shopping-box"><div class="empty-state" style="padding:6px 0;">Aucun repas planifié cette semaine.</div></div>`;
+    output.style.display = 'block';
+    return;
+  }
+  output.innerHTML = `<div class="shopping-box">
+    <div class="field-label" style="margin-top:0;">🛒 Liste de courses de la semaine</div>
+    ${parts.map(p=>`
+      <div style="margin-top:10px;">
+        <div style="font-weight:700;font-size:12.5px;color:var(--amber);">${p.jour} — ${escapeHtml(p.recette.titre)}</div>
+        ${p.recette.ingredients.split(String.fromCharCode(10)).filter(l=>l.trim()).map(l=>`<div class="shopping-item"><span>${escapeHtml(l.trim())}</span></div>`).join('')}
+      </div>
+    `).join('')}
+  </div>`;
+  output.style.display = 'block';
+};
+
+function filteredRecettes(){
+  let list = state.recettes;
+  if(recetteFiltre!=='toutes') list = list.filter(r=>r.categorie===recetteFiltre);
+  if(recetteRecherche.trim()){
+    const q = recetteRecherche.trim().toLowerCase();
+    list = list.filter(r=>r.titre.toLowerCase().includes(q));
+  }
+  return list.slice().sort((a,b)=>b.dateCreation-a.dateCreation);
+}
+function renderRecetteFilters(){
+  const wrap = document.getElementById('recette-filter-row');
+  const chips = [{key:'toutes',label:'Toutes'}, ...RECETTE_CATEGORIES.map(c=>({key:c,label:c}))];
+  wrap.innerHTML = '';
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'filter-chip' + (recetteFiltre===c.key?' active':'');
+    b.textContent = c.label;
+    b.onclick = ()=>{ recetteFiltre=c.key; renderRecetteList(); renderRecetteFilters(); };
+    wrap.appendChild(b);
+  });
+}
+function renderRecetteList(){
+  const wrap = document.getElementById('recette-list');
+  const list = filteredRecettes();
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-state">Aucune recette. Touche + pour en ajouter une.</div>`;
+    return;
+  }
+  wrap.innerHTML = '';
+  list.forEach(r=>{
+    const el = document.createElement('div');
+    el.className = 'dossier-card';
+    el.innerHTML = `
+      <div class="dossier-top">
+        <span class="dossier-client">${escapeHtml(r.titre)}</span>
+        <span class="dossier-badge">${r.categorie}</span>
+      </div>
+      <div class="dossier-meta">
+        <span>⏱ ${r.tempsMin} min</span>
+        <span class="recipe-stars">${'★'.repeat(r.note)}${'☆'.repeat(5-r.note)}</span>
+      </div>
+    `;
+    el.onclick = ()=> openRecettePanel(r.id);
+    wrap.appendChild(el);
+  });
+}
+function openRecettePanel(id){
+  const isNew = !id;
+  const r = isNew
+    ? { id: uid(), titre:'', categorie:'Plat', tempsMin:30, ingredients:'', etapes:'', note:3, dateCreation: Date.now() }
+    : state.recettes.find(x=>x.id===id);
+
+  const overlay = document.getElementById('panel-overlay');
+  const panel = document.getElementById('panel-content');
+  panel.innerHTML = `
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+      <div class="panel-title">${isNew?'Nouvelle recette':'Recette'}</div>
+      <button class="panel-close" id="panel-close">✕</button>
+    </div>
+
+    <div class="field-label" style="margin-top:0;">Titre</div>
+    <input type="text" id="rf-titre" value="${escapeHtml(r.titre)}" placeholder="Ex : Poulet rôti aux herbes">
+
+    <div class="field-label">Catégorie</div>
+    <div class="status-grid" id="rf-categorie-grid" style="grid-template-columns:repeat(2,1fr);"></div>
+
+    <div class="field-label">Temps de préparation (minutes)</div>
+    <input type="number" id="rf-temps" value="${r.tempsMin}">
+
+    <div class="field-label">Note</div>
+    <div class="status-grid" id="rf-note-grid" style="grid-template-columns:repeat(5,1fr);"></div>
+
+    <div class="field-label">Ingrédients (un par ligne)</div>
+    <textarea id="rf-ingredients" rows="5" placeholder="200g de farine&#10;3 œufs&#10;1 pincée de sel">${escapeHtml(r.ingredients)}</textarea>
+
+    <div class="field-label">Étapes</div>
+    <textarea id="rf-etapes" rows="5" placeholder="1. Préchauffer le four à 200°C...">${escapeHtml(r.etapes)}</textarea>
+
+    <button class="btn" id="btn-rf-save">${isNew?'Enregistrer la recette':'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn danger" id="btn-rf-delete">Supprimer cette recette</button>` : ''}
+  `;
+
+  let categorieChoisie = r.categorie;
+  const catGrid = panel.querySelector('#rf-categorie-grid');
+  RECETTE_CATEGORIES.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + (categorieChoisie===c?' active':'');
+    b.textContent = c;
+    b.onclick = ()=>{ categorieChoisie=c; catGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+    catGrid.appendChild(b);
+  });
+
+  let noteChoisie = r.note;
+  const noteGrid = panel.querySelector('#rf-note-grid');
+  [1,2,3,4,5].forEach(n=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + (noteChoisie===n?' active':'');
+    b.textContent = '★'.repeat(n);
+    b.style.fontSize = '11px';
+    b.onclick = ()=>{ noteChoisie=n; noteGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+    noteGrid.appendChild(b);
+  });
+
+  panel.querySelector('#btn-rf-save').onclick = ()=>{
+    const titre = panel.querySelector('#rf-titre').value.trim();
+    if(!titre){ alert('Le titre est requis.'); return; }
+    r.titre = titre;
+    r.categorie = categorieChoisie;
+    r.tempsMin = Number(panel.querySelector('#rf-temps').value) || 0;
+    r.note = noteChoisie;
+    r.ingredients = panel.querySelector('#rf-ingredients').value.trim();
+    r.etapes = panel.querySelector('#rf-etapes').value.trim();
+    if(isNew) state.recettes.push(r);
+    save();
+    closePanel();
+    renderRecetteFilters(); renderRecetteList(); renderWeekPlan();
+  };
+  if(!isNew){
+    panel.querySelector('#btn-rf-delete').onclick = ()=>{
+      if(!confirm(`Supprimer la recette "${r.titre}" ?`)) return;
+      state.recettes = state.recettes.filter(x=>x.id!==id);
+      Object.keys(state.planningSemaine).forEach(k=>{ if(state.planningSemaine[k]===id) state.planningSemaine[k]=null; });
+      save();
+      closePanel();
+      renderRecetteFilters(); renderRecetteList(); renderWeekPlan();
+    };
+  }
+  panel.querySelector('#panel-close').onclick = closePanel;
+  overlay.classList.add('active');
+}
+document.getElementById('btn-recette-add').onclick = ()=> openRecettePanel(null);
+document.getElementById('recette-search').addEventListener('input', e=>{ recetteRecherche=e.target.value; renderRecetteList(); });
+
+/* ---------- LECTURE ---------- */
+const LIVRE_STATUTS = [
+  { key:'a_lire', label:'À lire' },
+  { key:'en_cours', label:'En cours' },
+  { key:'termine', label:'Terminé' }
+];
+let livreFiltre = 'tous';
+let livreRecherche = '';
+function filteredLivres(){
+  let list = state.livres;
+  if(livreFiltre!=='tous') list = list.filter(l=>l.statut===livreFiltre);
+  if(livreRecherche.trim()){
+    const q = livreRecherche.trim().toLowerCase();
+    list = list.filter(l=>l.titre.toLowerCase().includes(q) || l.auteur.toLowerCase().includes(q));
+  }
+  return list.slice().sort((a,b)=>b.dateCreation-a.dateCreation);
+}
+function renderLivreStats(){
+  const wrap = document.getElementById('livre-stats');
+  const anneeActuelle = new Date().getFullYear();
+  const termines = state.livres.filter(l=>l.statut==='termine');
+  const terminesCetteAnnee = termines.filter(l=>l.dateFin && new Date(l.dateFin).getFullYear()===anneeActuelle).length;
+  const notesTerminees = termines.filter(l=>l.note>0);
+  const noteMoyenne = notesTerminees.length ? (notesTerminees.reduce((s,l)=>s+l.note,0)/notesTerminees.length).toFixed(1) : '—';
+  const items = [
+    { n: state.livres.filter(l=>l.statut==='en_cours').length, l:'En cours' },
+    { n: terminesCetteAnnee, l:'Terminés '+anneeActuelle },
+    { n: noteMoyenne, l:'Note moy.' },
+    { n: state.livres.length, l:'Total' }
+  ];
+  wrap.innerHTML = items.map(i=>`<div class="stat-card"><div class="stat-num" style="font-size:16px;">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+}
+function renderLivreFilters(){
+  const wrap = document.getElementById('livre-filter-row');
+  const chips = [{key:'tous',label:'Tous'}, ...LIVRE_STATUTS.map(s=>({key:s.key,label:s.label}))];
+  wrap.innerHTML = '';
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'filter-chip' + (livreFiltre===c.key?' active':'');
+    b.textContent = c.label;
+    b.onclick = ()=>{ livreFiltre=c.key; renderLivreList(); renderLivreFilters(); };
+    wrap.appendChild(b);
+  });
+}
+function renderLivreList(){
+  const wrap = document.getElementById('livre-list');
+  const list = filteredLivres();
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-state">Aucun livre ici. Touche + pour en ajouter un.</div>`;
+    return;
+  }
+  wrap.innerHTML = '';
+  list.forEach(l=>{
+    const st = LIVRE_STATUTS.find(s=>s.key===l.statut) || LIVRE_STATUTS[0];
+    const el = document.createElement('div');
+    el.className = 'dossier-card';
+    el.innerHTML = `
+      <div class="dossier-top">
+        <span class="dossier-client">${escapeHtml(l.titre)}</span>
+        <span class="dossier-badge">${st.label}</span>
+      </div>
+      <div class="dossier-meta">
+        <span>${escapeHtml(l.auteur)}</span>
+        ${l.statut==='termine' && l.note ? `<span class="recipe-stars">${'★'.repeat(l.note)}${'☆'.repeat(5-l.note)}</span>` : ''}
+      </div>
+    `;
+    el.onclick = ()=> openLivrePanel(l.id);
+    wrap.appendChild(el);
+  });
+}
+function openLivrePanel(id){
+  const isNew = !id;
+  const l = isNew
+    ? { id: uid(), titre:'', auteur:'', statut:'a_lire', note:0, dateDebut:null, dateFin:null, notes:[], dateCreation: Date.now() }
+    : state.livres.find(x=>x.id===id);
+
+  const overlay = document.getElementById('panel-overlay');
+  const panel = document.getElementById('panel-content');
+  panel.innerHTML = `
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+      <div class="panel-title">${isNew?'Nouveau livre':'Livre'}</div>
+      <button class="panel-close" id="panel-close">✕</button>
+    </div>
+
+    <div class="field-label" style="margin-top:0;">Titre</div>
+    <input type="text" id="lf-titre" value="${escapeHtml(l.titre)}" placeholder="Ex : Le Petit Prince">
+
+    <div class="field-label">Auteur</div>
+    <input type="text" id="lf-auteur" value="${escapeHtml(l.auteur)}" placeholder="Ex : Antoine de Saint-Exupéry">
+
+    <div class="field-label">Statut</div>
+    <div class="status-grid" id="lf-statut-grid" style="grid-template-columns:repeat(3,1fr);"></div>
+
+    <div class="field-label" id="lf-note-label" style="display:none;">Note</div>
+    <div class="status-grid" id="lf-note-grid" style="grid-template-columns:repeat(5,1fr);display:none;"></div>
+
+    <div class="field-label">Date de début (optionnel)</div>
+    <input type="date" id="lf-debut" value="${l.dateDebut?new Date(l.dateDebut).toISOString().slice(0,10):''}">
+
+    <div class="field-label">Date de fin (optionnel)</div>
+    <input type="date" id="lf-fin" value="${l.dateFin?new Date(l.dateFin).toISOString().slice(0,10):''}">
+
+    <div class="field-label">Ajouter une note / citation</div>
+    <textarea id="lf-note-texte" rows="2" placeholder="Une citation, une réflexion..."></textarea>
+
+    ${!isNew ? `<div class="field-label" style="margin-top:18px;">Notes & citations</div><div id="lf-notes-history"></div>` : ''}
+
+    <button class="btn" id="btn-lf-save">${isNew?'Ajouter à ma bibliothèque':'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn danger" id="btn-lf-delete">Supprimer ce livre</button>` : ''}
+  `;
+
+  let statutChoisi = l.statut;
+  const statutGrid = panel.querySelector('#lf-statut-grid');
+  function refreshNoteVisibility(){
+    const show = statutChoisi === 'termine';
+    panel.querySelector('#lf-note-label').style.display = show ? 'block' : 'none';
+    panel.querySelector('#lf-note-grid').style.display = show ? 'grid' : 'none';
+  }
+  LIVRE_STATUTS.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + (statutChoisi===s.key?' active':'');
+    b.textContent = s.label;
+    b.onclick = ()=>{ statutChoisi=s.key; statutGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active')); b.classList.add('active'); refreshNoteVisibility(); };
+    statutGrid.appendChild(b);
+  });
+
+  let noteChoisie = l.note || 0;
+  const noteGrid = panel.querySelector('#lf-note-grid');
+  [1,2,3,4,5].forEach(n=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + (noteChoisie===n?' active':'');
+    b.textContent = '★'.repeat(n);
+    b.style.fontSize = '11px';
+    b.onclick = ()=>{ noteChoisie=n; noteGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+    noteGrid.appendChild(b);
+  });
+  refreshNoteVisibility();
+
+  if(!isNew){
+    const hist = panel.querySelector('#lf-notes-history');
+    hist.innerHTML = l.notes.length ? l.notes.slice().reverse().map(n=>`<div class="note-item"><div class="note-date">${n.date}</div><div class="note-text">${escapeHtml(n.text)}</div></div>`).join('') : `<div class="note-empty">Aucune note.</div>`;
+  }
+
+  panel.querySelector('#btn-lf-save').onclick = ()=>{
+    const titre = panel.querySelector('#lf-titre').value.trim();
+    const auteur = panel.querySelector('#lf-auteur').value.trim();
+    if(!titre || !auteur){ alert("Le titre et l'auteur sont requis."); return; }
+    l.titre = titre;
+    l.auteur = auteur;
+    l.statut = statutChoisi;
+    l.note = statutChoisi==='termine' ? noteChoisie : 0;
+    const debutVal = panel.querySelector('#lf-debut').value;
+    l.dateDebut = debutVal ? new Date(debutVal+'T12:00:00').getTime() : null;
+    const finVal = panel.querySelector('#lf-fin').value;
+    l.dateFin = finVal ? new Date(finVal+'T12:00:00').getTime() : null;
+    const noteText = panel.querySelector('#lf-note-texte').value.trim();
+    if(noteText) l.notes.push({ date: new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), text: noteText });
+    if(isNew) state.livres.push(l);
+    save();
+    closePanel();
+    renderLivreStats(); renderLivreFilters(); renderLivreList();
+  };
+  if(!isNew){
+    panel.querySelector('#btn-lf-delete').onclick = ()=>{
+      if(!confirm(`Supprimer "${l.titre}" ?`)) return;
+      state.livres = state.livres.filter(x=>x.id!==id);
+      save();
+      closePanel();
+      renderLivreStats(); renderLivreFilters(); renderLivreList();
+    };
+  }
+  panel.querySelector('#panel-close').onclick = closePanel;
+  overlay.classList.add('active');
+}
+document.getElementById('btn-livre-add').onclick = ()=> openLivrePanel(null);
+document.getElementById('livre-search').addEventListener('input', e=>{ livreRecherche=e.target.value; renderLivreList(); });
+
+function renderAll(){
+  renderJobStats();
+  renderJobFilters();
+  renderJobList();
+  renderGolfStats();
+  renderGolfList();
+  renderWeekPlan();
+  renderRecetteFilters();
+  renderRecetteList();
+  renderLivreStats();
+  renderLivreFilters();
+  renderLivreList();
+}
+renderAll();
+
+})();
+</script>
+</body>
+</html>

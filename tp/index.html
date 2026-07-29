@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0D12">
+<link rel="manifest" href="manifest-tp.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>DDR TP</title>
+<style>
+:root{
+  --bg:#000000;
+  --bg-2:#0D0D10;
+  --glass:#131316;
+  --glass-hi:#1C1C21;
+  --border:rgba(255,255,255,0.10);
+  --blue:#6699FF;
+  --blue-glow:rgba(102,153,255,0.35);
+  --amber:#FF9966;
+  --amber-glow:rgba(255,153,102,0.4);
+  --turq:#CC99FF;
+  --off:#F5F0E6;
+  --dim:#9D9DB8;
+  --dim-2:#5C5C74;
+  --orange:#FFCC66;
+  --red:#FF6666;
+  --green:#66FFCC;
+  --radius:26px;
+  --radius-sm:20px;
+  --shadow:0 2px 10px rgba(0,0,0,0.5);
+  --mono:'Consolas','SF Mono','JetBrains Mono',ui-monospace,Menlo,monospace;
+  --display:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1100px 600px at 12% -8%, rgba(255,167,38,0.08), transparent 60%),
+    radial-gradient(900px 550px at 105% 5%, rgba(45,212,191,0.06), transparent 55%),
+    var(--bg);
+  color:var(--off);
+  font-family:var(--sans);
+  min-height:100vh;
+  overflow-x:hidden;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--amber-glow);}
+button{font-family:inherit;}
+.app{max-width:560px;margin:0 auto;padding:22px 16px 100px;min-height:100vh;position:relative;}
+
+.header{position:relative;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding:10px 14px 20px;}
+.header::after{content:'';position:absolute;left:14px;right:14px;bottom:0;height:7px;background:linear-gradient(90deg,var(--amber),var(--blue) 60%,transparent);border-radius:0 0 0 999px;}
+.header::before, .header::after{content:'';position:absolute;top:0;width:14px;height:14px;border-top:2px solid var(--amber);opacity:0.55;}
+.header::before{left:0;border-left:2px solid var(--amber);}
+.header::after{right:0;border-right:2px solid var(--amber);}
+.hello{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-0.01em;}
+.brand{font-family:var(--mono);font-size:10px;letter-spacing:0.18em;color:var(--dim-2);text-transform:uppercase;border:1px solid var(--border);border-radius:20px;padding:6px 10px;white-space:nowrap;}
+.brand b{color:var(--amber);}
+.link-pill{font-family:var(--mono);font-size:10px;color:var(--dim-2);margin-top:6px;}
+.link-pill.on{color:var(--green);}
+
+.view{display:none;animation:fadein .35s ease;}
+.view.active{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.stat-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 6px;text-align:center;box-shadow:var(--shadow);}
+.stat-num{font-family:var(--mono);font-size:20px;font-weight:700;}
+.stat-label{font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;}
+
+.toolbar{display:flex;gap:8px;margin-bottom:14px;}
+.search-input{flex:1;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--off);padding:10px 12px;font-size:13.5px;}
+.search-input:focus{outline:none;border-color:var(--amber);}
+.add-btn{background:linear-gradient(135deg,var(--amber),var(--turq));border:none;color:#0A0D12;font-weight:700;font-size:20px;width:42px;border-radius:var(--radius-sm);cursor:pointer;flex-shrink:0;}
+
+.filter-row{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;}
+.filter-chip{flex-shrink:0;background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:7px 13px;font-size:12px;color:var(--dim);cursor:pointer;white-space:nowrap;transition:all .2s;}
+.filter-chip.active{border-color:var(--amber);background:rgba(255,167,38,0.10);color:var(--amber);}
+
+.dossier-list{display:flex;flex-direction:column;gap:9px;}
+.dossier-card{background:var(--glass);border:1px solid var(--border);border-left:3px solid var(--dim-2);border-radius:var(--radius-sm);padding:13px 14px;cursor:pointer;box-shadow:var(--shadow);transition:background .2s, transform .2s;}
+.dossier-card:active{background:var(--glass-hi);}
+.dossier-card.st-nouveau{border-left-color:var(--blue);}
+.dossier-card.st-encours{border-left-color:var(--turq);}
+.dossier-card.st-relance{border-left-color:var(--orange);}
+.dossier-card.st-bloque{border-left-color:var(--red);}
+.dossier-card.st-cloture{border-left-color:var(--green);opacity:0.55;}
+.dossier-card.cm-rouge{border-left-color:var(--red);}
+.dossier-card.cm-vert{border-left-color:var(--green);}
+.dossier-card.cm-orange{border-left-color:var(--orange);}
+.dossier-card.cm-bleu{border-left-color:var(--blue);}
+.dossier-card.cm-noir{border-left-color:#C9D2DE;}
+.dossier-card.livre-fait{opacity:0.55;}
+.commande-urgent{font-family:var(--mono);font-size:9.5px;background:rgba(255,75,92,0.12);color:var(--red);border-radius:8px;padding:2px 7px;}
+.commande-vip{font-family:var(--mono);font-size:9.5px;background:rgba(255,167,38,0.16);color:var(--amber);border-radius:8px;padding:2px 7px;}
+.satisfaction-row{display:flex;gap:8px;}
+.satisfaction-row button{flex:1;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:22px;cursor:pointer;}
+.satisfaction-row button.active{border-color:var(--amber);background:rgba(255,167,38,0.1);}
+.commande-notified{font-family:var(--mono);font-size:9.5px;background:rgba(31,224,122,0.1);color:var(--green);border-radius:8px;padding:2px 7px;}
+.atp-money-card{background:var(--glass);border:1px solid var(--red);border-radius:var(--radius);padding:22px;text-align:center;box-shadow:var(--shadow);margin-bottom:8px;}
+.atp-money-num{font-family:var(--mono);font-size:36px;font-weight:700;color:var(--red);}
+.atp-money-sub{font-size:11.5px;color:var(--dim);margin-top:4px;}
+.atp-priority-list{display:flex;flex-direction:column;gap:8px;}
+.atp-priority-item{display:flex;gap:10px;align-items:flex-start;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;box-shadow:var(--shadow);cursor:pointer;}
+.atp-priority-num{font-family:var(--mono);font-weight:700;color:var(--blue);flex-shrink:0;}
+.atp-priority-body{flex:1;}
+.atp-priority-client{font-family:var(--display);font-size:13.5px;font-weight:700;}
+.atp-priority-sub{font-size:11.5px;color:var(--dim);margin-top:2px;}
+.dossier-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.dossier-client{font-family:var(--display);font-size:14.5px;font-weight:700;}
+.dossier-badge{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:0.04em;padding:3px 8px;border-radius:10px;background:rgba(255,255,255,0.06);color:var(--dim);}
+.dossier-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--dim);}
+.tag-pill{font-family:var(--mono);font-size:9.5px;background:rgba(255,167,38,0.10);color:var(--blue);border-radius:8px;padding:2px 7px;}
+.dossier-days{font-family:var(--mono);font-size:10.5px;color:var(--dim-2);margin-left:auto;}
+.dossier-motif{font-size:11px;color:var(--red);margin-top:6px;line-height:1.4;}
+.dossier-days.warn{color:var(--orange);}
+.dossier-days.danger{color:var(--red);}
+.empty-state{text-align:center;color:var(--dim-2);font-size:13px;padding:40px 10px;font-style:italic;}
+
+.org-list{display:flex;flex-direction:column;gap:8px;}
+.org-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);}
+.org-name{font-family:var(--display);font-size:13.5px;font-weight:700;}
+.org-sub{font-size:11px;color:var(--dim);margin-top:2px;}
+.org-count{font-family:var(--mono);font-size:18px;font-weight:700;}
+
+.section-title{font-family:var(--display);font-size:12.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--dim);margin:24px 0 11px;font-weight:700;}
+
+.panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;z-index:50;align-items:flex-end;justify-content:center;}
+.panel-overlay.active{display:flex;}
+.panel{background:var(--bg-2);border:1px solid var(--border);border-bottom:none;border-radius:22px 22px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:20px 18px 26px;animation:slideup .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,0.45);}
+@keyframes slideup{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.panel-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.panel-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.panel-title{font-family:var(--display);font-size:19px;font-weight:700;flex:1;}
+.panel-close{background:var(--glass);border:1px solid var(--border);color:var(--dim);width:30px;height:30px;border-radius:50%;font-size:15px;cursor:pointer;}
+.field-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin:14px 0 6px;}
+input[type=text],textarea,select{width:100%;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--off);padding:11px 12px;font-family:inherit;font-size:14px;resize:none;}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--amber);}
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.status-opt{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 4px;text-align:center;font-size:12px;color:var(--dim);cursor:pointer;transition:all .2s;}
+.status-opt.active{color:#0A0D12;font-weight:700;}
+.status-opt[data-st=nouveau].active{background:var(--blue);border-color:var(--blue);}
+.status-opt[data-st=encours].active{background:var(--turq);border-color:var(--turq);}
+.status-opt[data-st=relance].active{background:var(--orange);border-color:var(--orange);}
+.status-opt[data-st=bloque].active{background:var(--red);border-color:var(--red);}
+.status-opt[data-st=cloture].active{background:var(--green);border-color:var(--green);}
+.tag-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.tag-opt{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:7px 12px;font-size:12px;color:var(--dim);cursor:pointer;font-family:var(--mono);transition:all .2s;}
+.tag-opt.active{border-color:var(--amber);background:rgba(255,167,38,0.12);color:var(--amber);}
+.btn{width:100%;background:linear-gradient(135deg,var(--amber),var(--turq));border:none;color:#0A0D12;font-weight:700;font-size:14px;padding:13px;border-radius:var(--radius-sm);cursor:pointer;margin-top:18px;}
+.btn.danger{background:none;border:1px solid var(--red);color:var(--red);margin-top:10px;}
+.note-item{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;margin-top:7px;box-shadow:var(--shadow);}
+.note-date{font-family:var(--mono);font-size:9.5px;color:var(--dim-2);text-transform:uppercase;margin-bottom:3px;}
+.note-text{font-size:13px;line-height:1.4;}
+
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(to top, var(--bg) 55%, transparent);pointer-events:none;}
+.nav-inner{pointer-events:auto;display:flex;gap:5px;background:var(--bg-2);border:1px solid var(--border);border-radius:999px;padding:6px;max-width:400px;width:100%;box-shadow:var(--shadow);}
+.nav-btn{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;background:var(--glass);border:none;border-radius:999px;color:var(--dim);cursor:pointer;transition:all .2s;}
+.nav-btn.active{color:#000;font-weight:800;}
+.nav-btn:nth-child(1).active{background:var(--amber);}
+.nav-btn:nth-child(2).active{background:var(--turq);}
+.nav-btn:nth-child(3).active{background:var(--blue);}
+.nav-btn:nth-child(4).active{background:var(--orange);}
+.nav-btn:nth-child(5).active{background:var(--red);}
+.nav-icon{font-size:17px;}
+.nav-txt{font-size:9.5px;text-transform:uppercase;letter-spacing:0.04em;}
+/* ---------- BOOT / ENERGIZE ---------- */
+#boot-overlay{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .9s ease;}
+#boot-overlay.hide{opacity:0;pointer-events:none;}
+.boot-particles{position:absolute;inset:0;}
+.boot-spark{position:absolute;top:50%;left:50%;width:3px;height:3px;border-radius:50%;background:#CC99FF;box-shadow:0 0 10px 3px rgba(153,187,255,0.85);opacity:0;animation:sparkConverge 2.6s ease-in forwards;}
+@keyframes sparkConverge{0%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0.5);}10%{opacity:1;}80%{opacity:0.9;transform:translate(calc(var(--sx) * 0.08),calc(var(--sy) * 0.08)) scale(1.3);}100%{opacity:0;transform:translate(0,0) scale(0.3);}}
+.boot-ring{position:absolute;width:10px;height:10px;border-radius:50%;border:2px solid rgba(153,187,255,0.9);opacity:0;animation:ringPulse 1.3s ease-out 2.15s forwards;}
+@keyframes ringPulse{0%{width:10px;height:10px;opacity:0.9;border-width:3px;}100%{width:380px;height:380px;opacity:0;border-width:1px;}}
+.boot-text{position:relative;text-align:center;}
+.boot-logo{opacity:0;transform:scale(0.85);font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:0.16em;color:#fff;text-shadow:0 0 22px rgba(102,153,255,0.85);animation:logoReveal 0.9s ease-out 2.3s forwards;}
+.boot-logo b{color:var(--amber);}
+@keyframes logoReveal{0%{opacity:0;transform:scale(0.85);}55%{opacity:1;transform:scale(1.06);}100%{opacity:1;transform:scale(1);}}
+.boot-subtitle{margin-top:10px;opacity:0;font-family:var(--mono);font-size:11px;letter-spacing:0.3em;color:var(--turq);animation:subtitleReveal 0.8s ease-out 3.15s forwards;}
+@keyframes subtitleReveal{0%{opacity:0;transform:translateY(4px);}100%{opacity:0.85;transform:translateY(0);}}
+
+</style>
+</head>
+<body>
+
+<div id="boot-overlay">
+  <div class="boot-particles" id="boot-particles"></div>
+  <div class="boot-ring"></div>
+  <div class="boot-text">
+    <div class="boot-logo">DDR <b>TP</b></div>
+    <div class="boot-subtitle">SYSTÈME PRÊT</div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <div>
+      <div class="hello">Dossiers TP</div>
+      <div class="link-pill" id="link-pill">⚪ lien Cockpit non détecté</div>
+    </div>
+    <div class="brand">DDR <b>TP</b></div>
+  </div>
+
+  <!-- VUE DOSSIERS -->
+  <div class="view active" id="view-dossiers">
+    <div class="stats-row" id="stats-row"></div>
+    <div class="toolbar">
+      <input type="text" class="search-input" id="search-input" placeholder="Rechercher un client...">
+      <button class="add-btn" id="btn-add">+</button>
+    </div>
+    <div class="filter-row" id="filter-row"></div>
+    <div class="dossier-list" id="dossier-list"></div>
+  </div>
+
+  <!-- VUE ASSISTANT TP -->
+  <div class="view" id="view-assistant-tp">
+    <div class="section-title" style="margin-top:0;">TP à traiter</div>
+    <div class="stats-row" id="atp-stats-row"></div>
+
+    <div class="section-title">Impact financier</div>
+    <div class="atp-money-card" id="atp-money-card"></div>
+
+    <div class="section-title">Aujourd'hui il faut traiter</div>
+    <div class="atp-priority-list" id="atp-priority-list"></div>
+  </div>
+
+  <!-- VUE COMMANDES -->
+  <div class="view" id="view-commandes">
+    <div class="stats-row" id="commande-stats-row"></div>
+    <div class="toolbar">
+      <input type="text" class="search-input" id="commande-search-input" placeholder="Rechercher un client...">
+      <button class="add-btn" id="btn-commande-add">+</button>
+    </div>
+    <div class="filter-row" id="commande-filter-row"></div>
+    <div class="dossier-list" id="commande-list"></div>
+  </div>
+
+  <!-- VUE ORGANISMES -->
+  <div class="view" id="view-organismes">
+    <div class="section-title" style="margin-top:0;">Par organisme</div>
+    <div class="org-list" id="org-list"></div>
+  </div>
+
+  <!-- VUE REGLAGES -->
+  <div class="view" id="view-reglages">
+    <div class="section-title" style="margin-top:0;">Liaison DDR Cockpit</div>
+    <div class="dossier-card" style="cursor:default;">
+      <div class="dossier-meta" style="line-height:1.5;">
+        DDR TP écrit automatiquement le nombre de dossiers actifs (tous statuts sauf Clôturé) dans le compteur
+        "TP en attente" de DDR Cockpit, à condition que les deux fichiers soient ouverts depuis le même dossier/la même origine.
+        Aucune donnée de dossier n'est envoyée ailleurs.
+      </div>
+    </div>
+    <div class="section-title">Données</div>
+    <button class="btn" id="btn-export" style="margin-top:0;">📤 Exporter (JSON)</button>
+    <button class="btn" id="btn-import" style="background:var(--glass);border:1px solid var(--border);color:var(--off);">📥 Importer (JSON)</button>
+    <input type="file" id="file-import" accept="application/json" style="display:none;">
+    <button class="btn danger" id="btn-clear">Supprimer tous les dossiers</button>
+  </div>
+</div>
+
+<div class="panel-overlay" id="panel-overlay">
+  <div class="panel" id="panel-content"></div>
+</div>
+
+<div class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-view="dossiers"><span class="nav-icon">📋</span><span class="nav-txt">Dossiers</span></button>
+    <button class="nav-btn" data-view="assistant-tp"><span class="nav-icon">💰</span><span class="nav-txt">Assistant TP</span></button>
+    <button class="nav-btn" data-view="commandes"><span class="nav-icon">📦</span><span class="nav-txt">Commandes</span></button>
+    <button class="nav-btn" data-view="organismes"><span class="nav-icon">🏢</span><span class="nav-txt">Organismes</span></button>
+    <button class="nav-btn" data-view="reglages"><span class="nav-icon">⚙️</span><span class="nav-txt">Réglages</span></button>
+  </div>
+</div>
+
+<script>
+(function(){
+
+const STORAGE_KEY = 'ddr_tp_v1';
+const COCKPIT_KEY = 'ddr_cockpit_v1';
+
+const STATUTS = [
+  { key:'nouveau', label:'Nouveau', cls:'st-nouveau' },
+  { key:'encours',  label:'En cours', cls:'st-encours' },
+  { key:'relance',  label:'Relancé', cls:'st-relance' },
+  { key:'bloque',   label:'Bloqué', cls:'st-bloque' },
+  { key:'cloture',  label:'Clôturé', cls:'st-cloture' }
+];
+const TAGS = ['Gmoins','Gplus','Adapt','1+1','PB','OI','AL'];
+const RAISONS_BLOCAGE = ['Rejeté par la mutuelle','En attente réponse mutuelle','Dossier incomplet','Autre blocage'];
+const COMMANDE_STATUTS = [
+  { key:'verres_recus',     label:'Verres reçus',         cls:'cm-rouge' },
+  { key:'monture_recue',    label:'Monture reçue',        cls:'cm-vert' },
+  { key:'montage_attente',  label:'Montage en attente',   cls:'cm-orange' },
+  { key:'controle_qualite', label:'Contrôle qualité',     cls:'cm-bleu' },
+  { key:'client_a_appeler', label:'Client à appeler',     cls:'cm-noir' },
+  { key:'livre',            label:'Livré',                cls:'cm-vert' }
+];
+
+let state = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return { dossiers: [], commandes: [] };
+    const parsed = JSON.parse(raw);
+    if(!parsed.dossiers) parsed.dossiers = [];
+    parsed.dossiers.forEach(d=>{
+      if(d.motif===undefined) d.motif='';
+      if(d.action===undefined) d.action='';
+      if(d.montant===undefined) d.montant=0;
+      if(d.raisonBlocage===undefined) d.raisonBlocage='';
+    });
+    if(!parsed.commandes) parsed.commandes = [];
+    const OLD_TO_NEW_STATUT = { fabrication:'verres_recus', arrivee:'client_a_appeler', retiree:'livre' };
+    parsed.commandes.forEach(c=>{
+      if(c.clientPrevenu===undefined) c.clientPrevenu=false;
+      if(!c.notes) c.notes=[];
+      if(OLD_TO_NEW_STATUT[c.statut]) c.statut = OLD_TO_NEW_STATUT[c.statut];
+      if(c.urgent===undefined) c.urgent=false;
+      if(c.satisfaction===undefined) c.satisfaction=null;
+      if(c.satisfactionRaison===undefined) c.satisfactionRaison='';
+    });
+    return parsed;
+  }catch(e){ return { dossiers: [], commandes: [] }; }
+}
+function save(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  syncToCockpit();
+}
+function uid(){ return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+/* ---------- LIEN VERS DDR COCKPIT ---------- */
+function syncToCockpit(){
+  try{
+    const raw = localStorage.getItem(COCKPIT_KEY);
+    if(!raw) return;
+    const cockpit = JSON.parse(raw);
+    if(cockpit.kpi && cockpit.kpi.tpEnAttente){
+      const actifs = state.dossiers.filter(d=>d.statut !== 'cloture').length;
+      cockpit.kpi.tpEnAttente.current = actifs;
+      localStorage.setItem(COCKPIT_KEY, JSON.stringify(cockpit));
+    }
+  }catch(e){ /* cockpit pas encore initialisé, on ignore */ }
+}
+function renderLinkPill(){
+  const el = document.getElementById('link-pill');
+  const linked = !!localStorage.getItem(COCKPIT_KEY);
+  el.textContent = linked ? '🟢 lié à DDR Cockpit' : '⚪ lien Cockpit non détecté';
+  el.className = 'link-pill' + (linked ? ' on' : '');
+}
+
+/* ---------- FILTRES / RECHERCHE ---------- */
+let activeFilter = 'actifs';
+let searchTerm = '';
+
+function filteredDossiers(){
+  let list = state.dossiers;
+  if(activeFilter === 'actifs') list = list.filter(d=>d.statut !== 'cloture');
+  else if(activeFilter !== 'tous') list = list.filter(d=>d.statut === activeFilter);
+  if(searchTerm.trim()){
+    const q = searchTerm.trim().toLowerCase();
+    list = list.filter(d=> d.client.toLowerCase().includes(q) || (d.organisme||'').toLowerCase().includes(q));
+  }
+  return list.slice().sort((a,b)=> b.dateCreation - a.dateCreation);
+}
+
+/* ---------- STATS ---------- */
+function renderStats(){
+  const wrap = document.getElementById('stats-row');
+  const actifs = state.dossiers.filter(d=>d.statut!=='cloture');
+  const bloques = state.dossiers.filter(d=>d.statut==='bloque').length;
+  const relances = state.dossiers.filter(d=>d.statut==='relance').length;
+  const clotures7j = state.dossiers.filter(d=> d.statut==='cloture' && (Date.now()-d.dateMaj) < 7*24*3600*1000).length;
+  const items = [
+    { n: actifs.length, l:'Actifs' },
+    { n: bloques, l:'Bloqués' },
+    { n: relances, l:'Relancés' },
+    { n: clotures7j, l:'Clôt. 7j' }
+  ];
+  wrap.innerHTML = items.map(i=>`<div class="stat-card"><div class="stat-num">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+}
+
+/* ---------- FILTER CHIPS ---------- */
+function renderFilters(){
+  const wrap = document.getElementById('filter-row');
+  const chips = [
+    {key:'actifs', label:'Actifs'},
+    {key:'tous', label:'Tous'},
+    ...STATUTS.map(s=>({key:s.key, label:s.label}))
+  ];
+  wrap.innerHTML = '';
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'filter-chip' + (activeFilter===c.key ? ' active' : '');
+    b.textContent = c.label;
+    b.onclick = ()=>{ activeFilter = c.key; renderDossierList(); renderFilters(); };
+    wrap.appendChild(b);
+  });
+}
+
+/* ---------- LISTE DOSSIERS ---------- */
+function daysSince(ts){ return Math.floor((Date.now()-ts)/(24*3600*1000)); }
+
+function renderDossierList(){
+  const wrap = document.getElementById('dossier-list');
+  const list = filteredDossiers();
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-state">Aucun dossier ici. Touche + pour en ajouter un.</div>`;
+    return;
+  }
+  wrap.innerHTML = '';
+  list.forEach(d=>{
+    const st = STATUTS.find(s=>s.key===d.statut) || STATUTS[0];
+    const days = daysSince(d.dateCreation);
+    const daysCls = days>10 ? 'danger' : days>5 ? 'warn' : '';
+    const el = document.createElement('div');
+    el.className = 'dossier-card ' + st.cls;
+    el.innerHTML = `
+      <div class="dossier-top">
+        <span class="dossier-client">${escapeHtml(d.client)}</span>
+        <span class="dossier-badge">${st.label}</span>
+      </div>
+      <div class="dossier-meta">
+        ${d.organisme ? `<span>${escapeHtml(d.organisme)}</span>` : ''}
+        ${d.tag ? `<span class="tag-pill">${d.tag}</span>` : ''}
+        <span class="dossier-days ${daysCls}">${days}j</span>
+      </div>
+      ${d.statut==='bloque' && d.motif ? `<div class="dossier-motif">⚠ ${escapeHtml(d.motif)}${d.action?' → '+escapeHtml(d.action):''}</div>` : ''}
+    `;
+    el.onclick = ()=> openDossierPanel(d.id);
+    wrap.appendChild(el);
+  });
+}
+
+/* ---------- ORGANISMES ---------- */
+/* ---------- ASSISTANT TP ---------- */
+function renderAssistantTP(){
+  const actifs = state.dossiers.filter(d=>d.statut!=='cloture');
+  const parRaison = {};
+  RAISONS_BLOCAGE.forEach(r=> parRaison[r]=0);
+  let sansRaison = 0;
+  actifs.filter(d=>d.statut==='bloque').forEach(d=>{
+    if(d.raisonBlocage && parRaison[d.raisonBlocage]!==undefined) parRaison[d.raisonBlocage]++;
+    else sansRaison++;
+  });
+
+  const statsWrap = document.getElementById('atp-stats-row');
+  const items = [
+    { n: actifs.length, l:'À traiter' },
+    { n: parRaison['Rejeté par la mutuelle']+sansRaison, l:'Rejetés/autres' },
+    { n: parRaison['En attente réponse mutuelle'], l:'Attente mutuelle' },
+    { n: parRaison['Dossier incomplet'], l:'Incomplets' }
+  ];
+  statsWrap.innerHTML = items.map(i=>`<div class="stat-card"><div class="stat-num">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+
+  const totalImmobilise = actifs.reduce((s,d)=>s+(d.montant||0),0);
+  document.getElementById('atp-money-card').innerHTML = `
+    <div class="atp-money-num">${totalImmobilise.toLocaleString('fr-FR')} €</div>
+    <div class="atp-money-sub">immobilisés sur ${actifs.length} dossier(s) TP en cours</div>
+  `;
+
+  const prioritaires = actifs.slice().sort((a,b)=>{
+    const scoreA = (a.statut==='bloque'?100:0) + daysSince(a.dateCreation) + (a.montant||0)/100;
+    const scoreB = (b.statut==='bloque'?100:0) + daysSince(b.dateCreation) + (b.montant||0)/100;
+    return scoreB - scoreA;
+  }).slice(0,3);
+  const listWrap = document.getElementById('atp-priority-list');
+  if(prioritaires.length===0){
+    listWrap.innerHTML = `<div class="empty-state">Aucun dossier TP en cours. 👍</div>`;
+  } else {
+    listWrap.innerHTML = prioritaires.map((d,i)=>`
+      <div class="atp-priority-item" data-id="${d.id}">
+        <span class="atp-priority-num">${i+1}</span>
+        <div class="atp-priority-body">
+          <div class="atp-priority-client">${escapeHtml(d.client)}</div>
+          <div class="atp-priority-sub">${escapeHtml(d.raisonBlocage || d.motif || 'Statut : '+d.statut)} · ${daysSince(d.dateCreation)}j · ${(d.montant||0).toLocaleString('fr-FR')} €</div>
+        </div>
+      </div>
+    `).join('');
+    listWrap.querySelectorAll('.atp-priority-item').forEach(el=>{
+      el.onclick = ()=> openDossierPanel(el.dataset.id);
+    });
+  }
+}
+
+function renderOrganismes(){
+  const wrap = document.getElementById('org-list');
+  const actifs = state.dossiers.filter(d=>d.statut!=='cloture');
+  const map = {};
+  actifs.forEach(d=>{
+    const key = d.organisme && d.organisme.trim() ? d.organisme.trim() : 'Non renseigné';
+    if(!map[key]) map[key] = { count:0, bloques:0 };
+    map[key].count++;
+    if(d.statut==='bloque') map[key].bloques++;
+  });
+  const entries = Object.entries(map).sort((a,b)=>b[1].count-a[1].count);
+  if(entries.length===0){
+    wrap.innerHTML = `<div class="empty-state">Aucun dossier actif pour l'instant.</div>`;
+    return;
+  }
+  wrap.innerHTML = entries.map(([name,v])=>`
+    <div class="org-card">
+      <div>
+        <div class="org-name">${escapeHtml(name)}</div>
+        <div class="org-sub">${v.bloques>0 ? v.bloques + ' bloqué(s)' : 'RAS'}</div>
+      </div>
+      <div class="org-count">${v.count}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+
+/* ---------- COMMANDES ---------- */
+function cmdUid(){ return 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function joursRestants(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(dateStr); due.setHours(0,0,0,0);
+  return Math.round((due - today)/(24*3600*1000));
+}
+let commandeFiltre = 'actives';
+let commandeRecherche = '';
+function isVipClient(nom){
+  try{
+    const raw = localStorage.getItem(COCKPIT_KEY);
+    if(!raw) return false;
+    const cockpit = JSON.parse(raw);
+    return (cockpit.clients||[]).some(c=>c.vip && c.nom.trim().toLowerCase()===nom.trim().toLowerCase());
+  }catch(e){ return false; }
+}
+function commandeEnRetard(c){
+  return c.statut!=='livre' && c.datePrevue && joursRestants(c.datePrevue) < 0;
+}
+function delaiMoyenLivraison(){
+  const livrees = state.commandes.filter(c=>c.statut==='livre');
+  if(livrees.length===0) return null;
+  const total = livrees.reduce((s,c)=>s+Math.round((c.dateMaj-c.dateCommande)/(24*3600*1000)), 0);
+  return Math.round(total/livrees.length);
+}
+function filteredCommandes(){
+  let list = state.commandes;
+  if(commandeFiltre==='actives') list = list.filter(c=>c.statut!=='livre');
+  else if(commandeFiltre==='retard') list = list.filter(c=>commandeEnRetard(c));
+  else if(commandeFiltre==='a_prevenir') list = list.filter(c=>c.statut==='client_a_appeler');
+  else if(commandeFiltre==='vip') list = list.filter(c=>c.statut!=='livre' && isVipClient(c.client));
+  else if(commandeFiltre==='urgent') list = list.filter(c=>c.statut!=='livre' && c.urgent);
+  else if(commandeFiltre==='livre') list = list.filter(c=>c.statut==='livre');
+  else if(commandeFiltre!=='tous') list = list.filter(c=>c.statut===commandeFiltre);
+  if(commandeRecherche.trim()){
+    const q = commandeRecherche.trim().toLowerCase();
+    list = list.filter(c=>c.client.toLowerCase().includes(q));
+  }
+  return list.slice().sort((a,b)=>{
+    if(a.urgent!==b.urgent) return a.urgent ? -1 : 1;
+    const da = a.datePrevue ? new Date(a.datePrevue).getTime() : Infinity;
+    const db = b.datePrevue ? new Date(b.datePrevue).getTime() : Infinity;
+    return da - db;
+  });
+}
+function renderCommandeStats(){
+  const wrap = document.getElementById('commande-stats-row');
+  const actives = state.commandes.filter(c=>c.statut!=='livre');
+  const retard = state.commandes.filter(c=>commandeEnRetard(c)).length;
+  const vip = actives.filter(c=>isVipClient(c.client)).length;
+  const urgent = actives.filter(c=>c.urgent).length;
+  const delaiMoyen = delaiMoyenLivraison();
+  const items = [
+    { n: actives.length, l:'Actives' },
+    { n: retard, l:'En retard' },
+    { n: vip, l:'Priorité VIP' },
+    { n: urgent, l:'Urgentes' },
+    { n: delaiMoyen!==null ? delaiMoyen+'j' : '—', l:'Délai moyen' }
+  ];
+  wrap.innerHTML = items.map(i=>`<div class="stat-card"><div class="stat-num" style="font-size:17px;">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+}
+function renderCommandeFilters(){
+  const wrap = document.getElementById('commande-filter-row');
+  const chips = [
+    {key:'actives', label:'Actives'},
+    {key:'retard', label:'⚠ En retard'},
+    {key:'vip', label:'⭐ VIP'},
+    {key:'urgent', label:'🔺 Urgentes'},
+    {key:'a_prevenir', label:'📞 À prévenir'},
+    {key:'livre', label:'✓ Livrées'},
+    {key:'tous', label:'Toutes'}
+  ];
+  wrap.innerHTML = '';
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'filter-chip' + (commandeFiltre===c.key ? ' active' : '');
+    b.textContent = c.label;
+    b.onclick = ()=>{ commandeFiltre = c.key; renderCommandeList(); renderCommandeFilters(); };
+    wrap.appendChild(b);
+  });
+}
+function renderCommandeList(){
+  const wrap = document.getElementById('commande-list');
+  const list = filteredCommandes();
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-state">Aucune commande ici. Touche + pour en ajouter une.</div>`;
+    return;
+  }
+  wrap.innerHTML = '';
+  list.forEach(c=>{
+    const st = COMMANDE_STATUTS.find(s=>s.key===c.statut) || COMMANDE_STATUTS[0];
+    const enRetard = commandeEnRetard(c);
+    const jours = c.datePrevue ? joursRestants(c.datePrevue) : null;
+    const daysCls = enRetard ? 'danger' : (jours!==null && jours<=2 && c.statut!=='livre') ? 'warn' : '';
+    let joursLabel = c.datePrevue ? new Date(c.datePrevue).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : 'sans date prévue';
+    if(jours!==null && c.statut!=='livre'){
+      joursLabel += enRetard ? ` — retard ${Math.abs(jours)}j` : jours===0 ? ' — aujourd\u2019hui' : ` — ${jours}j`;
+    }
+    const vip = c.statut!=='livre' && isVipClient(c.client);
+    const el = document.createElement('div');
+    el.className = 'dossier-card ' + st.cls + (c.statut==='livre' ? ' livre-fait' : '');
+    el.innerHTML = `
+      <div class="dossier-top">
+        <span class="dossier-client">${escapeHtml(c.client)}</span>
+        <span class="dossier-badge">${st.label}</span>
+      </div>
+      <div class="dossier-meta">
+        <span class="dossier-days ${daysCls}">${joursLabel}</span>
+        ${vip ? `<span class="commande-vip">⭐ VIP</span>` : ''}
+        ${c.urgent ? `<span class="commande-urgent">🔺 urgent</span>` : ''}
+        ${c.statut==='client_a_appeler' && c.clientPrevenu ? `<span class="commande-notified">✓ prévenu</span>` : ''}
+      </div>
+    `;
+    el.onclick = ()=> openCommandePanel(c.id);
+    wrap.appendChild(el);
+  });
+}
+function openCommandePanel(id){
+  const isNew = !id;
+  const c = isNew
+    ? { id: cmdUid(), client:'', telephone:'', dateCommande: Date.now(), datePrevue:'', statut:'verres_recus', clientPrevenu:false, urgent:false, satisfaction:null, satisfactionRaison:'', dateMaj: Date.now(), notes:[] }
+    : state.commandes.find(x=>x.id===id);
+
+  const overlay = document.getElementById('panel-overlay');
+  const panel = document.getElementById('panel-content');
+  panel.innerHTML = `
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+      <div class="panel-title">${isNew ? 'Nouvelle commande' : 'Commande'}</div>
+      <button class="panel-close" id="panel-close">✕</button>
+    </div>
+
+    <div class="field-label" style="margin-top:0;">Client</div>
+    <input type="text" id="cm-client" value="${escapeHtml(c.client)}" placeholder="Nom du client">
+
+    <div class="field-label">Téléphone</div>
+    <input type="text" id="cm-tel" value="${escapeHtml(c.telephone)}" placeholder="06...">
+
+    <div class="field-label">Date prévue (annoncée par le fabricant)</div>
+    <input type="date" id="cm-date-prevue" value="${c.datePrevue ? new Date(c.datePrevue).toISOString().slice(0,10) : ''}">
+
+    <div class="field-label">Statut</div>
+    <div class="status-grid" id="cm-status-grid" style="grid-template-columns:1fr 1fr 1fr;"></div>
+
+    <div class="field-label">Commande urgente ?</div>
+    <div class="status-grid" id="cm-urgent-grid" style="grid-template-columns:1fr 1fr;"></div>
+
+    <div class="field-label" id="cm-prevenu-label" style="display:none;">Client prévenu ?</div>
+    <div class="status-grid" id="cm-prevenu-grid" style="grid-template-columns:1fr 1fr;display:none;"></div>
+
+    <div class="field-label" id="cm-satisfaction-label" style="display:none;">Satisfaction du client</div>
+    <div class="satisfaction-row" id="cm-satisfaction-row" style="display:none;"></div>
+    <textarea id="cm-satisfaction-raison" rows="2" placeholder="Pourquoi ? (optionnel)" style="display:none;margin-top:8px;">${escapeHtml(c.satisfactionRaison||'')}</textarea>
+
+    <div class="field-label">Ajouter une note</div>
+    <textarea id="cm-note" rows="2" placeholder="Ex : appelé le fournisseur, délai confirmé..."></textarea>
+
+    ${!isNew ? `<div class="field-label" style="margin-top:18px;">Historique</div><div id="cm-notes-history"></div>` : ''}
+
+    <button class="btn" id="btn-cm-save">${isNew ? 'Créer la commande' : 'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn danger" id="btn-cm-delete">Supprimer cette commande</button>` : ''}
+  `;
+
+  let statutChoisi = c.statut;
+  let urgentChoisi = c.urgent;
+  let prevenuChoisi = c.clientPrevenu;
+  let satisfactionChoisie = c.satisfaction;
+
+  function refreshConditionalFields(){
+    const showPrevenu = statutChoisi === 'client_a_appeler';
+    panel.querySelector('#cm-prevenu-label').style.display = showPrevenu ? 'block' : 'none';
+    panel.querySelector('#cm-prevenu-grid').style.display = showPrevenu ? 'grid' : 'none';
+
+    const showSatisfaction = statutChoisi === 'livre';
+    panel.querySelector('#cm-satisfaction-label').style.display = showSatisfaction ? 'block' : 'none';
+    panel.querySelector('#cm-satisfaction-row').style.display = showSatisfaction ? 'flex' : 'none';
+    panel.querySelector('#cm-satisfaction-raison').style.display = showSatisfaction ? 'block' : 'none';
+  }
+
+  const statusGrid = panel.querySelector('#cm-status-grid');
+  COMMANDE_STATUTS.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + (statutChoisi===s.key ? ' active' : '');
+    b.textContent = s.label;
+    b.style.fontSize = '11px';
+    b.onclick = ()=>{
+      statutChoisi = s.key;
+      statusGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      refreshConditionalFields();
+    };
+    statusGrid.appendChild(b);
+  });
+
+  const urgentGrid = panel.querySelector('#cm-urgent-grid');
+  [[true,'🔺 Oui'],[false,'Non']].forEach(([v,label])=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + (urgentChoisi===v ? ' active' : '');
+    b.textContent = label;
+    b.onclick = ()=>{
+      urgentChoisi = v;
+      urgentGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    };
+    urgentGrid.appendChild(b);
+  });
+
+  const prevenuGrid = panel.querySelector('#cm-prevenu-grid');
+  [['oui','Oui'],['non','Pas encore']].forEach(([v,label])=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + ((prevenuChoisi===(v==='oui')) ? ' active' : '');
+    b.textContent = label;
+    b.onclick = ()=>{
+      prevenuChoisi = (v==='oui');
+      prevenuGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    };
+    prevenuGrid.appendChild(b);
+  });
+
+  const satisfRow = panel.querySelector('#cm-satisfaction-row');
+  [['tres_satisfait','😀'],['satisfait','🙂'],['neutre','😐'],['insatisfait','☹️']].forEach(([v,emoji])=>{
+    const b = document.createElement('button');
+    b.className = (satisfactionChoisie===v ? 'active' : '');
+    b.textContent = emoji;
+    b.onclick = ()=>{
+      satisfactionChoisie = v;
+      satisfRow.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    };
+    satisfRow.appendChild(b);
+  });
+
+  refreshConditionalFields();
+
+  if(!isNew){
+    const hist = panel.querySelector('#cm-notes-history');
+    if(c.notes.length===0){
+      hist.innerHTML = `<div class="empty-state" style="padding:10px 0;">Aucune note.</div>`;
+    } else {
+      hist.innerHTML = c.notes.slice().reverse().map(n=>`
+        <div class="note-item"><div class="note-date">${n.date}</div><div class="note-text">${escapeHtml(n.text)}</div></div>
+      `).join('');
+    }
+  }
+
+  panel.querySelector('#btn-cm-save').onclick = ()=>{
+    const client = panel.querySelector('#cm-client').value.trim();
+    if(!client){ alert('Le nom du client est requis.'); return; }
+    c.client = client;
+    c.telephone = panel.querySelector('#cm-tel').value.trim();
+    const dateVal = panel.querySelector('#cm-date-prevue').value;
+    c.datePrevue = dateVal ? new Date(dateVal+'T12:00:00').getTime() : '';
+    c.statut = statutChoisi;
+    c.urgent = urgentChoisi;
+    c.clientPrevenu = statutChoisi==='client_a_appeler' ? prevenuChoisi : c.clientPrevenu;
+    if(statutChoisi==='livre'){
+      c.satisfaction = satisfactionChoisie;
+      c.satisfactionRaison = panel.querySelector('#cm-satisfaction-raison').value.trim();
+    }
+    c.dateMaj = Date.now();
+    const noteText = panel.querySelector('#cm-note').value.trim();
+    if(noteText) c.notes.push({ date: new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), text: noteText });
+    if(isNew) state.commandes.push(c);
+    save();
+    closePanel();
+    renderCommandeStats(); renderCommandeFilters(); renderCommandeList();
+  };
+  if(!isNew){
+    panel.querySelector('#btn-cm-delete').onclick = ()=>{
+      if(!confirm(`Supprimer la commande de ${c.client} ?`)) return;
+      state.commandes = state.commandes.filter(x=>x.id!==id);
+      save();
+      closePanel();
+      renderCommandeStats(); renderCommandeFilters(); renderCommandeList();
+    };
+  }
+  panel.querySelector('#panel-close').onclick = closePanel;
+  overlay.classList.add('active');
+}
+document.getElementById('btn-commande-add').onclick = ()=> openCommandePanel(null);
+document.getElementById('commande-search-input').addEventListener('input', e=>{
+  commandeRecherche = e.target.value;
+  renderCommandeList();
+});
+
+/* ---------- PANEL DOSSIER ---------- */
+function openDossierPanel(id){
+  const isNew = !id;
+  const d = isNew
+    ? { id: uid(), client:'', organisme:'', statut:'nouveau', tag:'', motif:'', action:'', dateCreation: Date.now(), dateMaj: Date.now(), notes:[] }
+    : state.dossiers.find(x=>x.id===id);
+
+  const overlay = document.getElementById('panel-overlay');
+  const panel = document.getElementById('panel-content');
+
+  panel.innerHTML = `
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+      <div class="panel-title">${isNew ? 'Nouveau dossier' : 'Modifier le dossier'}</div>
+      <button class="panel-close" id="panel-close">✕</button>
+    </div>
+
+    <div class="field-label" style="margin-top:0;">Client</div>
+    <input type="text" id="f-client" value="${escapeHtml(d.client)}" placeholder="Nom du client">
+
+    <div class="field-label">Organisme / mutuelle</div>
+    <input type="text" id="f-organisme" value="${escapeHtml(d.organisme)}" placeholder="Ex : Almerys, Malakoff...">
+
+    <div class="field-label">Statut</div>
+    <div class="status-grid" id="status-grid"></div>
+
+    <div class="field-label">Tag</div>
+    <div class="tag-grid" id="tag-grid"></div>
+
+    <div class="field-label">Montant du dossier (€)</div>
+    <input type="number" id="f-montant" value="${d.montant||''}" placeholder="Ex : 890">
+
+    <div class="field-label">Catégorie de blocage</div>
+    <select class="select-native" id="f-raison-blocage">
+      <option value="">— Aucune —</option>
+      ${RAISONS_BLOCAGE.map(r=>`<option value="${r}" ${d.raisonBlocage===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+
+    <div class="field-label">Motif de blocage (détail libre)</div>
+    <input type="text" id="f-motif" value="${escapeHtml(d.motif||'')}" placeholder="Ex : pièce manquante, en attente organisme, litige client...">
+
+    <div class="field-label">Action recommandée</div>
+    <input type="text" id="f-action" value="${escapeHtml(d.action||'')}" placeholder="Ex : relancer l'organisme par téléphone, demander la pièce au client...">
+
+    <div class="field-label">Ajouter une note</div>
+    <textarea id="f-note" rows="2" placeholder="Ex : relance envoyée, pièce manquante..."></textarea>
+
+    ${!isNew ? `<div class="field-label" style="margin-top:18px;">Historique</div><div id="notes-history"></div>` : ''}
+
+    <button class="btn" id="btn-save">${isNew ? 'Créer le dossier' : 'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn danger" id="btn-delete">Supprimer ce dossier</button>` : ''}
+  `;
+
+  const statusGrid = panel.querySelector('#status-grid');
+  let currentStatut = d.statut;
+  STATUTS.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'status-opt' + (currentStatut===s.key ? ' active' : '');
+    b.dataset.st = s.key;
+    b.textContent = s.label;
+    b.onclick = ()=>{
+      currentStatut = s.key;
+      statusGrid.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    };
+    statusGrid.appendChild(b);
+  });
+
+  const tagGrid = panel.querySelector('#tag-grid');
+  let currentTag = d.tag;
+  TAGS.forEach(t=>{
+    const b = document.createElement('button');
+    b.className = 'tag-opt' + (currentTag===t ? ' active' : '');
+    b.textContent = t;
+    b.onclick = ()=>{
+      currentTag = (currentTag===t) ? '' : t;
+      tagGrid.querySelectorAll('.tag-opt').forEach(x=>x.classList.remove('active'));
+      if(currentTag) b.classList.add('active');
+    };
+    tagGrid.appendChild(b);
+  });
+
+  if(!isNew){
+    const hist = panel.querySelector('#notes-history');
+    if(d.notes.length===0){
+      hist.innerHTML = `<div class="empty-state" style="padding:10px 0;">Aucune note.</div>`;
+    } else {
+      hist.innerHTML = d.notes.slice().reverse().map(n=>`
+        <div class="note-item"><div class="note-date">${n.date}</div><div class="note-text">${escapeHtml(n.text)}</div></div>
+      `).join('');
+    }
+  }
+
+  panel.querySelector('#btn-save').onclick = ()=>{
+    const client = panel.querySelector('#f-client').value.trim();
+    if(!client){ alert('Le nom du client est requis.'); return; }
+    d.client = client;
+    d.organisme = panel.querySelector('#f-organisme').value.trim();
+    d.montant = Number(panel.querySelector('#f-montant').value) || 0;
+    d.raisonBlocage = panel.querySelector('#f-raison-blocage').value;
+    d.motif = panel.querySelector('#f-motif').value.trim();
+    d.action = panel.querySelector('#f-action').value.trim();
+    d.statut = currentStatut;
+    d.tag = currentTag;
+    d.dateMaj = Date.now();
+    const noteText = panel.querySelector('#f-note').value.trim();
+    if(noteText){
+      d.notes.push({ date: new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), text: noteText });
+    }
+    if(isNew) state.dossiers.push(d);
+    save();
+    closePanel();
+    renderAll();
+  };
+
+  if(!isNew){
+    panel.querySelector('#btn-delete').onclick = ()=>{
+      if(!confirm(`Supprimer le dossier de ${d.client} ?`)) return;
+      state.dossiers = state.dossiers.filter(x=>x.id!==id);
+      save();
+      closePanel();
+      renderAll();
+    };
+  }
+
+  panel.querySelector('#panel-close').onclick = closePanel;
+  overlay.classList.add('active');
+}
+function closePanel(){ document.getElementById('panel-overlay').classList.remove('active'); }
+document.getElementById('panel-overlay').addEventListener('click', e=>{ if(e.target.id==='panel-overlay') closePanel(); });
+
+document.getElementById('btn-add').onclick = ()=> openDossierPanel(null);
+document.getElementById('search-input').addEventListener('input', e=>{ searchTerm = e.target.value; renderDossierList(); });
+
+/* ---------- EXPORT / IMPORT ---------- */
+document.getElementById('btn-export').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `ddr-tp-export-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+document.getElementById('btn-import').onclick = ()=> document.getElementById('file-import').click();
+document.getElementById('file-import').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const imported = JSON.parse(reader.result);
+      if(!imported.dossiers) throw new Error('format invalide');
+      if(!confirm(`Importer ${imported.dossiers.length} dossier(s) ? Ça remplacera les données actuelles.`)) return;
+      state = imported;
+      save();
+      renderAll();
+    }catch(err){ alert('Fichier invalide.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+document.getElementById('btn-clear').onclick = ()=>{
+  if(!confirm('Supprimer TOUS les dossiers ? Cette action est irréversible.')) return;
+  state = { dossiers: [] };
+  save();
+  renderAll();
+};
+
+/* ---------- NAV ---------- */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  };
+});
+
+/* ---------- RENDER ALL ---------- */
+function renderAll(){
+  renderStats();
+  renderFilters();
+  renderDossierList();
+  renderOrganismes();
+  renderLinkPill();
+  renderCommandeStats();
+  renderCommandeFilters();
+  renderCommandeList();
+  renderAssistantTP();
+}
+renderAll();
+syncToCockpit();
+
+window.addEventListener('storage', (e)=>{
+  if(e.key===COCKPIT_KEY) renderLinkPill();
+});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw-tp.js').catch(()=>{});
+  });
+}
+
+})();
+</script>
+<script>
+(function(){
+  var wrap = document.getElementById('boot-particles');
+  var overlay = document.getElementById('boot-overlay');
+  var N = 40;
+  for(var i=0;i<N;i++){
+    var angle = (Math.PI*2/N)*i + (Math.random()*0.4-0.2);
+    var dist = 140 + Math.random()*110;
+    var sx = Math.cos(angle)*dist;
+    var sy = Math.sin(angle)*dist;
+    var el = document.createElement('div');
+    el.className = 'boot-spark';
+    el.style.setProperty('--sx', sx.toFixed(1)+'px');
+    el.style.setProperty('--sy', sy.toFixed(1)+'px');
+    el.style.animationDelay = (Math.random()*1.1).toFixed(2)+'s';
+    if(i % 3 === 0) el.style.background = '#FF9966';
+    wrap.appendChild(el);
+  }
+
+  function playEnergizeSound(){
+    try{
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return;
+      var ctx = new Ctx();
+      if(ctx.state === 'suspended') ctx.resume();
+      var now = ctx.currentTime;
+      var master = ctx.createGain();
+      master.gain.value = 0.16;
+      master.connect(ctx.destination);
+
+      var hum = ctx.createOscillator();
+      hum.type = 'sine';
+      hum.frequency.setValueAtTime(55, now);
+      hum.frequency.exponentialRampToValueAtTime(150, now + 2.3);
+      var humGain = ctx.createGain();
+      humGain.gain.setValueAtTime(0.0001, now);
+      humGain.gain.exponentialRampToValueAtTime(0.45, now + 1.6);
+      humGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
+      hum.connect(humGain); humGain.connect(master);
+      hum.start(now); hum.stop(now + 2.5);
+
+      var notes = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1318.5];
+      notes.forEach(function(freq, i){
+        var t = now + 0.2 + i*0.26;
+        var osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.3, t+0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+0.5);
+        osc.connect(g); g.connect(master);
+        osc.start(t); osc.stop(t+0.55);
+      });
+
+      var chimeT = now + 2.3;
+      [880, 1108.73, 1760].forEach(function(freq, i){
+        var osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        var g = ctx.createGain();
+        var t = chimeT + i*0.08;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.28, t+0.06);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+1.4);
+        osc.connect(g); g.connect(master);
+        osc.start(t); osc.stop(t+1.5);
+      });
+    }catch(e){ /* Web Audio indisponible ou bloqué — l'animation visuelle reste intacte */ }
+  }
+  playEnergizeSound();
+  document.addEventListener('pointerdown', function firstTouch(){
+    document.removeEventListener('pointerdown', firstTouch);
+    playEnergizeSound();
+  }, { once:true });
+
+  function dismiss(){
+    if(overlay.classList.contains('hide')) return;
+    overlay.classList.add('hide');
+    setTimeout(function(){ overlay.remove(); }, 900);
+  }
+  overlay.addEventListener('click', dismiss);
+  setTimeout(dismiss, 4700);
+})();
+</script>
+</body>
+</html>
