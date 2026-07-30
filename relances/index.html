@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1A73E8">
+<title>Relances Clients — DDR Opticien</title>
+<style>
+:root{
+  --primary:#1A73E8;
+  --primary-dark:#0F5BC4;
+  --primary-container:#E8F0FE;
+  --on-primary-container:#0B3D91;
+  --secondary:#00897B;
+  --secondary-container:#DCF5F0;
+  --error:#D93025;
+  --error-container:#FCE8E6;
+  --amber:#F9AB00;
+  --amber-container:#FEF3DC;
+  --bg:#F2F2F7;
+  --surface:#FFFFFF;
+  --surface-2:#F8F9FA;
+  --on-surface:#1C1B1F;
+  --on-surface-dim:#5F6368;
+  --outline:#E1E3E6;
+  --radius:16px;
+  --radius-sm:10px;
+  --elev1:0 1px 2px rgba(0,0,0,0.20), 0 1px 3px rgba(60,64,67,0.12);
+  --elev3:0 4px 8px rgba(60,64,67,0.20), 0 1px 4px rgba(60,64,67,0.16);
+  --sans:'Roboto','Segoe UI',Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:var(--bg);
+  color:var(--on-surface);
+  font-family:var(--sans);
+  min-height:100vh;
+  line-height:1.45;
+}
+button{font-family:inherit;}
+.app{max-width:560px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:96px;}
+
+/* ---------- TOP APP BAR ---------- */
+.appbar{position:sticky;top:0;z-index:40;background:var(--primary);color:#fff;box-shadow:var(--elev1);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;}
+.appbar-title{font-size:20px;font-weight:500;letter-spacing:0.01em;}
+.appbar-sub{font-size:11.5px;opacity:0.85;margin-top:2px;}
+.appbar-icon{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.14);border:none;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+.content{padding:16px 16px 8px;}
+.view{display:none;}
+.view.active{display:block;animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---------- STATS ---------- */
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+@media (min-width:420px){ .stats-row{grid-template-columns:repeat(4,1fr);} }
+.stat-card{background:var(--surface);border-radius:var(--radius-sm);box-shadow:var(--elev1);padding:14px 10px;text-align:center;}
+.stat-num{font-size:20px;font-weight:700;color:var(--primary);}
+.stat-label{font-size:10px;color:var(--on-surface-dim);text-transform:uppercase;letter-spacing:0.03em;margin-top:3px;}
+
+/* ---------- CHIPS ---------- */
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;}
+.chip{flex-shrink:0;background:var(--surface);border:1px solid var(--outline);border-radius:999px;padding:8px 15px;font-size:12.5px;color:var(--on-surface-dim);cursor:pointer;transition:all .15s;}
+.chip.active{background:var(--primary-container);border-color:var(--primary);color:var(--on-primary-container);font-weight:500;}
+
+/* ---------- CARDS (client list) ---------- */
+.client-list{display:flex;flex-direction:column;gap:10px;}
+.client-card{position:relative;overflow:hidden;background:var(--surface);border-radius:var(--radius);box-shadow:var(--elev1);padding:14px 16px;cursor:pointer;}
+.client-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;}
+.client-name{font-size:15px;font-weight:500;}
+.badge{font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;}
+.badge.b-grey{background:#EEEEEE;color:var(--on-surface-dim);}
+.badge.b-blue{background:var(--primary-container);color:var(--on-primary-container);}
+.badge.b-green{background:var(--secondary-container);color:#00695C;}
+.badge.b-amber{background:var(--amber-container);color:#8A5B00;}
+.badge.b-red{background:var(--error-container);color:var(--error);}
+.client-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--on-surface-dim);}
+.client-meta .warn{color:var(--amber);font-weight:600;}
+.client-meta .danger{color:var(--error);font-weight:600;}
+.empty-state{text-align:center;color:#9AA0A6;font-size:13px;padding:40px 10px;}
+
+/* ---------- FAB ---------- */
+.fab{position:fixed;right:20px;bottom:88px;width:56px;height:56px;border-radius:16px;background:var(--primary);color:#fff;border:none;font-size:26px;box-shadow:var(--elev3);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:50;}
+.fab:active{transform:scale(0.94);}
+
+/* ---------- BOTTOM NAV ---------- */
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--surface);box-shadow:0 -1px 4px rgba(60,64,67,0.18);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
+.bottom-nav-inner{display:flex;width:100%;max-width:560px;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 8px;background:none;border:none;color:var(--on-surface-dim);cursor:pointer;}
+.nav-btn .nav-ic{font-size:21px;}
+.nav-btn .nav-txt{font-size:10.5px;font-weight:500;}
+.nav-btn.active{color:var(--primary);}
+
+/* ---------- SNACKBAR ---------- */
+.snackbar{position:fixed;left:16px;right:16px;bottom:80px;max-width:528px;margin:0 auto;background:#323232;color:#fff;padding:14px 18px;border-radius:8px;font-size:13.5px;box-shadow:var(--elev3);transform:translateY(150px);opacity:0;transition:transform .25s ease, opacity .25s ease;z-index:99;pointer-events:none;}
+.snackbar.show{transform:translateY(0);opacity:1;}
+
+/* ---------- BOTTOM SHEET / PANEL ---------- */
+.sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:90;align-items:flex-end;justify-content:center;}
+.sheet-overlay.active{display:flex;}
+.sheet{background:var(--surface);border-radius:28px 28px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:10px 22px 28px;box-shadow:0 -8px 30px rgba(0,0,0,0.25);}
+.sheet-handle{width:32px;height:4px;background:#D8D8D8;border-radius:2px;margin:0 auto 16px;}
+.sheet-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.sheet-title{font-size:18px;font-weight:600;}
+.sheet-close{background:var(--surface-2);border:none;border-radius:50%;width:34px;height:34px;color:var(--on-surface-dim);cursor:pointer;font-size:15px;}
+
+.field-label{font-size:11.5px;color:var(--on-surface-dim);text-transform:uppercase;letter-spacing:0.04em;margin:14px 0 6px;font-weight:500;}
+input[type=text],input[type=tel],input[type=number],input[type=date],textarea,select{
+  width:100%;background:var(--surface-2);border:1px solid var(--outline);border-radius:var(--radius-sm);color:var(--on-surface);padding:12px 14px;font-size:14.5px;font-family:inherit;
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--primary);border-width:2px;padding:11px 13px;}
+textarea{resize:vertical;}
+.select-row{display:flex;gap:8px;flex-wrap:wrap;}
+.select-opt{flex:1;min-width:90px;background:var(--surface-2);border:1px solid var(--outline);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;font-size:12.5px;color:var(--on-surface-dim);cursor:pointer;}
+.select-opt.active{background:var(--primary-container);border-color:var(--primary);color:var(--on-primary-container);font-weight:600;}
+
+.btn{width:100%;background:var(--primary);border:none;color:#fff;font-weight:600;font-size:14.5px;padding:14px;border-radius:var(--radius-sm);cursor:pointer;margin-top:18px;box-shadow:var(--elev1);letter-spacing:0.02em;}
+.btn:active{transform:scale(0.98);}
+.btn.outline{background:none;border:1.5px solid var(--primary);color:var(--primary);box-shadow:none;}
+.btn.text-danger{background:none;border:none;color:var(--error);box-shadow:none;margin-top:8px;}
+.btn.secondary{background:var(--secondary);}
+
+.note-item{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px;margin-top:8px;}
+.note-date{font-size:10px;color:var(--on-surface-dim);text-transform:uppercase;margin-bottom:3px;font-weight:600;}
+.note-text{font-size:13px;}
+
+/* Ripple */
+.ripple-ink{position:absolute;border-radius:50%;background:rgba(255,255,255,0.5);transform:scale(0);animation:rippleAnim .55s ease-out;pointer-events:none;}
+.ripple-ink.dark{background:rgba(0,0,0,0.12);}
+@keyframes rippleAnim{ to{ transform:scale(2.6); opacity:0; } }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <div class="appbar">
+    <div>
+      <div class="appbar-title" id="appbar-title">Avis Google</div>
+      <div class="appbar-sub" id="appbar-sub">—</div>
+    </div>
+    <button class="appbar-icon" id="btn-export-current">⋮</button>
+  </div>
+
+  <!-- ============ VUE AVIS GOOGLE ============ -->
+  <div class="content view active" id="view-avis">
+    <div class="stats-row" id="avis-stats"></div>
+    <div class="chip-row" id="avis-filter-row"></div>
+    <div class="client-list" id="avis-list"></div>
+  </div>
+
+  <!-- ============ VUE VIP / FIDELITE ============ -->
+  <div class="content view" id="view-vip">
+    <div class="stats-row" id="vip-stats"></div>
+    <div class="chip-row" id="vip-filter-row"></div>
+    <div class="client-list" id="vip-list"></div>
+  </div>
+
+  <!-- ============ VUE 2NDE PAIRE ============ -->
+  <div class="content view" id="view-deuxieme">
+    <div class="stats-row" id="deuxieme-stats"></div>
+    <div class="chip-row" id="deuxieme-filter-row"></div>
+    <div class="client-list" id="deuxieme-list"></div>
+  </div>
+
+  <button class="fab" id="fab-add">＋</button>
+
+  <div class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="nav-btn active" data-view="avis"><span class="nav-ic">⭐</span><span class="nav-txt">Avis Google</span></button>
+      <button class="nav-btn" data-view="vip"><span class="nav-ic">💎</span><span class="nav-txt">VIP</span></button>
+      <button class="nav-btn" data-view="deuxieme"><span class="nav-ic">👓</span><span class="nav-txt">2nde Paire</span></button>
+    </div>
+  </div>
+
+</div>
+
+<div class="sheet-overlay" id="sheet-overlay">
+  <div class="sheet" id="sheet-content"></div>
+</div>
+
+<div class="snackbar" id="snackbar"></div>
+
+<script>
+(function(){
+
+const STORAGE_KEY = 'opticien_relances_v1';
+const DEFAULT_STATE = { avisClients: [], vipClients: [], deuxiemePaireClients: [] };
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+    Object.keys(DEFAULT_STATE).forEach(k=>{ if(!parsed[k]) parsed[k]=structuredClone(DEFAULT_STATE[k]); });
+    return parsed;
+  }catch(e){ return structuredClone(DEFAULT_STATE); }
+}
+let state = load();
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+/* ---------- UTILS ---------- */
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function dateKeyFromDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+function todayKey(){ return dateKeyFromDate(new Date()); }
+function tsFromDateInput(val){ return val ? new Date(val+'T12:00:00').getTime() : Date.now(); }
+function fmtDate(ts){ return ts ? new Date(ts).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '—'; }
+function fmtDateShort(ts){ return ts ? new Date(ts).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : '—'; }
+function joursDepuis(ts){ return Math.floor((Date.now()-ts)/(24*3600*1000)); }
+function closeSheet(){ document.getElementById('sheet-overlay').classList.remove('active'); }
+function openSheet(){ document.getElementById('sheet-overlay').classList.add('active'); }
+let snackbarTimeout=null;
+function showSnackbar(text){
+  const el = document.getElementById('snackbar');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(snackbarTimeout);
+  snackbarTimeout = setTimeout(()=> el.classList.remove('show'), 2600);
+}
+function attachRipple(container){
+  container.querySelectorAll('[data-ripple]').forEach(el=>{
+    if(el.dataset.rippleBound) return;
+    el.dataset.rippleBound = '1';
+    el.style.position = el.style.position || 'relative';
+    el.addEventListener('click', function(e){
+      const rect = el.getBoundingClientRect();
+      const ink = document.createElement('span');
+      const size = Math.max(rect.width, rect.height);
+      ink.className = 'ripple-ink' + (el.dataset.rippleDark ? ' dark' : '');
+      ink.style.width = ink.style.height = size+'px';
+      ink.style.left = (e.clientX-rect.left-size/2)+'px';
+      ink.style.top = (e.clientY-rect.top-size/2)+'px';
+      el.appendChild(ink);
+      setTimeout(()=>ink.remove(), 600);
+    });
+  });
+}
+
+/* =====================================================================
+   AVIS GOOGLE
+   ===================================================================== */
+const AVIS_STATUTS = [ {key:'a_solliciter',label:'À solliciter',cls:'b-grey'}, {key:'sollicite',label:'Sollicité',cls:'b-amber'}, {key:'avis_laisse',label:'Avis laissé',cls:'b-green'} ];
+function avisMessage(nom){
+  return `Bonjour ${nom}, merci pour votre confiance ! Si vous avez été satisfait(e) de votre passage en magasin, un avis Google nous aiderait énormément 🙏 Merci d’avance !`;
+}
+let avisFiltre = 'a_solliciter';
+function filteredAvis(){
+  let list = state.avisClients;
+  if(avisFiltre!=='tous') list = list.filter(c=>c.statut===avisFiltre);
+  return list.slice().sort((a,b)=>b.dateAchat-a.dateAchat);
+}
+function renderAvisStats(){
+  const wrap = document.getElementById('avis-stats');
+  const total = state.avisClients.length;
+  const solliciter = state.avisClients.filter(c=>c.statut==='a_solliciter').length;
+  const sollicite = state.avisClients.filter(c=>c.statut==='sollicite').length;
+  const laisse = state.avisClients.filter(c=>c.statut==='avis_laisse').length;
+  const taux = total>0 ? Math.round((laisse/total)*100) : 0;
+  wrap.innerHTML = [
+    { n: solliciter, l:'À solliciter' }, { n: sollicite, l:'Sollicités' }, { n: laisse, l:'Avis laissés' }, { n: taux+'%', l:'Taux conversion' }
+  ].map(i=>`<div class="stat-card"><div class="stat-num">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+}
+function renderAvisFilters(){
+  const wrap = document.getElementById('avis-filter-row');
+  const chips = [{key:'a_solliciter',label:'À solliciter'}, ...AVIS_STATUTS.slice(1).map(s=>({key:s.key,label:s.label})), {key:'tous',label:'Tous'}];
+  wrap.innerHTML = '';
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'chip'+(avisFiltre===c.key?' active':'');
+    b.textContent = c.label;
+    b.onclick = ()=>{ avisFiltre=c.key; renderAvisList(); renderAvisFilters(); };
+    wrap.appendChild(b);
+  });
+}
+function renderAvisList(){
+  const wrap = document.getElementById('avis-list');
+  const list = filteredAvis();
+  if(list.length===0){ wrap.innerHTML = `<div class="empty-state">Aucun client ici. Touche + pour en ajouter un.</div>`; return; }
+  wrap.innerHTML = '';
+  list.forEach(c=>{
+    const st = AVIS_STATUTS.find(s=>s.key===c.statut)||AVIS_STATUTS[0];
+    const el = document.createElement('div');
+    el.className = 'client-card';
+    el.setAttribute('data-ripple','');
+    el.dataset.rippleDark = '1';
+    el.innerHTML = `
+      <div class="client-top"><span class="client-name">${escapeHtml(c.nom)}</span><span class="badge ${st.cls}">${st.label}</span></div>
+      <div class="client-meta"><span>Achat : ${fmtDateShort(c.dateAchat)}</span>${c.telephone?`<span>📞 ${escapeHtml(c.telephone)}</span>`:''}</div>
+    `;
+    el.onclick = ()=> openAvisSheet(c.id);
+    wrap.appendChild(el);
+    attachRipple(wrap);
+  });
+}
+function openAvisSheet(id){
+  const isNew = !id;
+  const c = isNew ? { id: uid(), nom:'', telephone:'', dateAchat: Date.now(), statut:'a_solliciter', notes:'' } : state.avisClients.find(x=>x.id===id);
+  const sheet = document.getElementById('sheet-content');
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><div class="sheet-title">${isNew?'Nouveau client':'Client'}</div><button class="sheet-close" id="sheet-close">✕</button></div>
+    <div class="field-label" style="margin-top:0;">Nom</div>
+    <input type="text" id="av-nom" value="${escapeHtml(c.nom)}" placeholder="Nom du client">
+    <div class="field-label">Téléphone (optionnel)</div>
+    <input type="tel" id="av-tel" value="${escapeHtml(c.telephone)}" placeholder="06...">
+    <div class="field-label">Date d'achat</div>
+    <input type="date" id="av-date" value="${dateKeyFromDate(new Date(c.dateAchat))}">
+    <div class="field-label">Statut</div>
+    <div class="select-row" id="av-statut-row"></div>
+    <div class="field-label">Message suggéré</div>
+    <textarea id="av-message" rows="3" readonly>${escapeHtml(avisMessage(c.nom||'—'))}</textarea>
+    <button class="btn secondary" id="btn-av-copy" data-ripple>📋 Copier le message</button>
+    <div class="field-label">Notes (optionnel)</div>
+    <textarea id="av-notes" rows="2">${escapeHtml(c.notes||'')}</textarea>
+    <button class="btn" id="btn-av-save" data-ripple>${isNew?'Ajouter':'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn text-danger" id="btn-av-delete" data-ripple>Supprimer ce client</button>` : ''}
+  `;
+  let statutChoisi = c.statut;
+  const statutRow = sheet.querySelector('#av-statut-row');
+  AVIS_STATUTS.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'select-opt'+(statutChoisi===s.key?' active':'');
+    b.textContent = s.label;
+    b.onclick = ()=>{ statutChoisi=s.key; statutRow.querySelectorAll('.select-opt').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+    statutRow.appendChild(b);
+  });
+  sheet.querySelector('#av-nom').addEventListener('input', e=>{ sheet.querySelector('#av-message').value = avisMessage(e.target.value.trim()||'—'); });
+  sheet.querySelector('#btn-av-copy').onclick = ()=>{
+    const text = sheet.querySelector('#av-message').value;
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(()=>showSnackbar('Message copié !')).catch(()=>showSnackbar('Impossible de copier.')); }
+    else showSnackbar('Copie non supportée sur ce navigateur.');
+  };
+  sheet.querySelector('#btn-av-save').onclick = ()=>{
+    const nom = sheet.querySelector('#av-nom').value.trim();
+    if(!nom){ alert('Le nom est requis.'); return; }
+    c.nom = nom;
+    c.telephone = sheet.querySelector('#av-tel').value.trim();
+    c.dateAchat = tsFromDateInput(sheet.querySelector('#av-date').value);
+    c.statut = statutChoisi;
+    c.notes = sheet.querySelector('#av-notes').value.trim();
+    if(isNew) state.avisClients.push(c);
+    save(); closeSheet(); renderAvisStats(); renderAvisFilters(); renderAvisList();
+    showSnackbar(isNew?'Client ajouté.':'Client mis à jour.');
+  };
+  if(!isNew){
+    sheet.querySelector('#btn-av-delete').onclick = ()=>{
+      if(!confirm(`Supprimer ${c.nom} ?`)) return;
+      state.avisClients = state.avisClients.filter(x=>x.id!==id);
+      save(); closeSheet(); renderAvisStats(); renderAvisFilters(); renderAvisList();
+      showSnackbar('Client supprimé.');
+    };
+  }
+  sheet.querySelector('#sheet-close').onclick = closeSheet;
+  attachRipple(sheet);
+  openSheet();
+}
+
+/* =====================================================================
+   2NDE PAIRE
+   ===================================================================== */
+const DEUXIEME_STATUTS = [ {key:'a_contacter',label:'À contacter',cls:'b-grey'}, {key:'contacte',label:'Contacté',cls:'b-amber'}, {key:'converti',label:'Converti',cls:'b-green'}, {key:'refuse',label:'Refusé',cls:'b-red'} ];
+let deuxiemeFiltre = 'a_contacter';
+function filteredDeuxieme(){
+  let list = state.deuxiemePaireClients;
+  if(deuxiemeFiltre!=='tous') list = list.filter(c=>c.statut===deuxiemeFiltre);
+  return list.slice().sort((a,b)=>b.dateAchat-a.dateAchat);
+}
+function renderDeuxiemeStats(){
+  const wrap = document.getElementById('deuxieme-stats');
+  const total = state.deuxiemePaireClients.length;
+  const aContacter = state.deuxiemePaireClients.filter(c=>c.statut==='a_contacter').length;
+  const contacte = state.deuxiemePaireClients.filter(c=>c.statut==='contacte').length;
+  const converti = state.deuxiemePaireClients.filter(c=>c.statut==='converti').length;
+  const taux = total>0 ? Math.round((converti/total)*100) : 0;
+  wrap.innerHTML = [
+    { n: aContacter, l:'À contacter' }, { n: contacte, l:'Contactés' }, { n: converti, l:'Convertis' }, { n: taux+'%', l:'Taux conversion' }
+  ].map(i=>`<div class="stat-card"><div class="stat-num">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+}
+function renderDeuxiemeFilters(){
+  const wrap = document.getElementById('deuxieme-filter-row');
+  const chips = [...DEUXIEME_STATUTS.map(s=>({key:s.key,label:s.label})), {key:'tous',label:'Tous'}];
+  wrap.innerHTML = '';
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'chip'+(deuxiemeFiltre===c.key?' active':'');
+    b.textContent = c.label;
+    b.onclick = ()=>{ deuxiemeFiltre=c.key; renderDeuxiemeList(); renderDeuxiemeFilters(); };
+    wrap.appendChild(b);
+  });
+}
+function renderDeuxiemeList(){
+  const wrap = document.getElementById('deuxieme-list');
+  const list = filteredDeuxieme();
+  if(list.length===0){ wrap.innerHTML = `<div class="empty-state">Aucun client ici. Touche + pour en ajouter un.</div>`; return; }
+  wrap.innerHTML = '';
+  list.forEach(c=>{
+    const st = DEUXIEME_STATUTS.find(s=>s.key===c.statut)||DEUXIEME_STATUTS[0];
+    const el = document.createElement('div');
+    el.className = 'client-card';
+    el.setAttribute('data-ripple',''); el.dataset.rippleDark='1';
+    el.innerHTML = `
+      <div class="client-top"><span class="client-name">${escapeHtml(c.nom)}</span><span class="badge ${st.cls}">${st.label}</span></div>
+      <div class="client-meta">${c.mutuelle?`<span>${escapeHtml(c.mutuelle)}</span>`:''}<span>Achat : ${fmtDateShort(c.dateAchat)}</span></div>
+    `;
+    el.onclick = ()=> openDeuxiemeSheet(c.id);
+    wrap.appendChild(el);
+    attachRipple(wrap);
+  });
+}
+function openDeuxiemeSheet(id){
+  const isNew = !id;
+  const c = isNew ? { id: uid(), nom:'', telephone:'', mutuelle:'', dateAchat: Date.now(), statut:'a_contacter', notes:'' } : state.deuxiemePaireClients.find(x=>x.id===id);
+  const sheet = document.getElementById('sheet-content');
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><div class="sheet-title">${isNew?'Nouveau client':'Client'}</div><button class="sheet-close" id="sheet-close">✕</button></div>
+    <div class="field-label" style="margin-top:0;">Nom</div>
+    <input type="text" id="dp-nom" value="${escapeHtml(c.nom)}" placeholder="Nom du client">
+    <div class="field-label">Téléphone (optionnel)</div>
+    <input type="tel" id="dp-tel" value="${escapeHtml(c.telephone)}" placeholder="06...">
+    <div class="field-label">Mutuelle / organisme</div>
+    <input type="text" id="dp-mutuelle" value="${escapeHtml(c.mutuelle)}" placeholder="Ex : Almerys, Malakoff...">
+    <div class="field-label">Date d'achat de la 1ère paire</div>
+    <input type="date" id="dp-date" value="${dateKeyFromDate(new Date(c.dateAchat))}">
+    <div class="field-label">Statut</div>
+    <div class="select-row" id="dp-statut-row"></div>
+    <div class="field-label">Notes (optionnel)</div>
+    <textarea id="dp-notes" rows="2">${escapeHtml(c.notes||'')}</textarea>
+    <button class="btn" id="btn-dp-save" data-ripple>${isNew?'Ajouter':'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn text-danger" id="btn-dp-delete" data-ripple>Supprimer ce client</button>` : ''}
+  `;
+  let statutChoisi = c.statut;
+  const statutRow = sheet.querySelector('#dp-statut-row');
+  DEUXIEME_STATUTS.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'select-opt'+(statutChoisi===s.key?' active':'');
+    b.textContent = s.label;
+    b.onclick = ()=>{ statutChoisi=s.key; statutRow.querySelectorAll('.select-opt').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+    statutRow.appendChild(b);
+  });
+  sheet.querySelector('#btn-dp-save').onclick = ()=>{
+    const nom = sheet.querySelector('#dp-nom').value.trim();
+    if(!nom){ alert('Le nom est requis.'); return; }
+    c.nom = nom;
+    c.telephone = sheet.querySelector('#dp-tel').value.trim();
+    c.mutuelle = sheet.querySelector('#dp-mutuelle').value.trim();
+    c.dateAchat = tsFromDateInput(sheet.querySelector('#dp-date').value);
+    c.statut = statutChoisi;
+    c.notes = sheet.querySelector('#dp-notes').value.trim();
+    if(isNew) state.deuxiemePaireClients.push(c);
+    save(); closeSheet(); renderDeuxiemeStats(); renderDeuxiemeFilters(); renderDeuxiemeList();
+    showSnackbar(isNew?'Client ajouté.':'Client mis à jour.');
+  };
+  if(!isNew){
+    sheet.querySelector('#btn-dp-delete').onclick = ()=>{
+      if(!confirm(`Supprimer ${c.nom} ?`)) return;
+      state.deuxiemePaireClients = state.deuxiemePaireClients.filter(x=>x.id!==id);
+      save(); closeSheet(); renderDeuxiemeStats(); renderDeuxiemeFilters(); renderDeuxiemeList();
+      showSnackbar('Client supprimé.');
+    };
+  }
+  sheet.querySelector('#sheet-close').onclick = closeSheet;
+  attachRipple(sheet);
+  openSheet();
+}
+
+/* =====================================================================
+   VIP / FIDELITE
+   ===================================================================== */
+function anniversaireProche(c){
+  if(!c.dateAnniversaire) return null;
+  const now = new Date();
+  const anniv = new Date(c.dateAnniversaire);
+  const thisYear = new Date(now.getFullYear(), anniv.getMonth(), anniv.getDate());
+  if(thisYear < new Date(now.getFullYear(),now.getMonth(),now.getDate())) thisYear.setFullYear(now.getFullYear()+1);
+  return Math.round((thisYear-now)/(24*3600*1000));
+}
+let vipFiltre = 'tous';
+function filteredVip(){
+  let list = state.vipClients;
+  if(vipFiltre==='anniversaire') list = list.filter(c=>{ const j=anniversaireProche(c); return j!==null && j<=30; });
+  return list.slice().sort((a,b)=>(b.montantTotal||0)-(a.montantTotal||0));
+}
+function renderVipStats(){
+  const wrap = document.getElementById('vip-stats');
+  const total = state.vipClients.length;
+  const anniv30 = state.vipClients.filter(c=>{ const j=anniversaireProche(c); return j!==null && j<=30; }).length;
+  const totalAchats = state.vipClients.reduce((s,c)=>s+(c.montantTotal||0),0);
+  wrap.innerHTML = [
+    { n: total, l:'Clients VIP' }, { n: anniv30, l:'Anniv. sous 30j' }, { n: totalAchats.toLocaleString('fr-FR')+' €', l:'Total achats' }
+  ].map(i=>`<div class="stat-card"><div class="stat-num" style="font-size:16px;">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+}
+function renderVipFilters(){
+  const wrap = document.getElementById('vip-filter-row');
+  const chips = [{key:'tous',label:'Tous'},{key:'anniversaire',label:'🎂 Anniversaire proche'}];
+  wrap.innerHTML = '';
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'chip'+(vipFiltre===c.key?' active':'');
+    b.textContent = c.label;
+    b.onclick = ()=>{ vipFiltre=c.key; renderVipList(); renderVipFilters(); };
+    wrap.appendChild(b);
+  });
+}
+function renderVipList(){
+  const wrap = document.getElementById('vip-list');
+  const list = filteredVip();
+  if(list.length===0){ wrap.innerHTML = `<div class="empty-state">Aucun client VIP. Touche + pour en ajouter un.</div>`; return; }
+  wrap.innerHTML = '';
+  list.forEach(c=>{
+    const j = anniversaireProche(c);
+    const el = document.createElement('div');
+    el.className = 'client-card';
+    el.setAttribute('data-ripple',''); el.dataset.rippleDark='1';
+    el.innerHTML = `
+      <div class="client-top"><span class="client-name">${escapeHtml(c.nom)}</span><span class="badge b-blue">${(c.montantTotal||0).toLocaleString('fr-FR')} €</span></div>
+      <div class="client-meta">
+        ${c.dateDernierAchat?`<span>Dernier achat : ${fmtDateShort(c.dateDernierAchat)}</span>`:''}
+        ${j!==null?`<span class="${j<=7?'danger':j<=30?'warn':''}">🎂 J-${j}</span>`:''}
+      </div>
+    `;
+    el.onclick = ()=> openVipSheet(c.id);
+    wrap.appendChild(el);
+    attachRipple(wrap);
+  });
+}
+function openVipSheet(id){
+  const isNew = !id;
+  const c = isNew ? { id: uid(), nom:'', telephone:'', dateAnniversaire:'', dateDernierAchat:'', montantTotal:0, notes:[] } : state.vipClients.find(x=>x.id===id);
+  const sheet = document.getElementById('sheet-content');
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><div class="sheet-title">${isNew?'Nouveau client VIP':'Client VIP'}</div><button class="sheet-close" id="sheet-close">✕</button></div>
+    <div class="field-label" style="margin-top:0;">Nom</div>
+    <input type="text" id="vip-nom" value="${escapeHtml(c.nom)}" placeholder="Nom du client">
+    <div class="field-label">Téléphone (optionnel)</div>
+    <input type="tel" id="vip-tel" value="${escapeHtml(c.telephone)}" placeholder="06...">
+    <div class="field-label">Date d'anniversaire (optionnel)</div>
+    <input type="date" id="vip-anniv" value="${c.dateAnniversaire?dateKeyFromDate(new Date(c.dateAnniversaire)):''}">
+    <div class="field-label">Dernier achat (optionnel)</div>
+    <input type="date" id="vip-dernier" value="${c.dateDernierAchat?dateKeyFromDate(new Date(c.dateDernierAchat)):''}">
+    <div class="field-label">Montant total des achats (€)</div>
+    <input type="number" id="vip-montant" value="${c.montantTotal||''}" placeholder="Ex : 890">
+    <div class="field-label">Ajouter une note</div>
+    <textarea id="vip-note" rows="2" placeholder="Ex : préfère les montures fines, aime être rappelé le matin..."></textarea>
+    ${!isNew ? `<div class="field-label" style="margin-top:16px;">Historique</div><div id="vip-notes-history"></div>` : ''}
+    <button class="btn" id="btn-vip-save" data-ripple>${isNew?'Ajouter':'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn text-danger" id="btn-vip-delete" data-ripple>Supprimer ce client</button>` : ''}
+  `;
+  if(!isNew){
+    const hist = sheet.querySelector('#vip-notes-history');
+    hist.innerHTML = (c.notes||[]).length ? c.notes.slice().reverse().map(n=>`<div class="note-item"><div class="note-date">${n.date}</div><div class="note-text">${escapeHtml(n.text)}</div></div>`).join('') : `<div class="empty-state" style="padding:10px 0;">Aucune note.</div>`;
+  }
+  sheet.querySelector('#btn-vip-save').onclick = ()=>{
+    const nom = sheet.querySelector('#vip-nom').value.trim();
+    if(!nom){ alert('Le nom est requis.'); return; }
+    c.nom = nom;
+    c.telephone = sheet.querySelector('#vip-tel').value.trim();
+    const annivVal = sheet.querySelector('#vip-anniv').value;
+    c.dateAnniversaire = annivVal ? tsFromDateInput(annivVal) : '';
+    const dernierVal = sheet.querySelector('#vip-dernier').value;
+    c.dateDernierAchat = dernierVal ? tsFromDateInput(dernierVal) : '';
+    c.montantTotal = Number(sheet.querySelector('#vip-montant').value)||0;
+    if(!c.notes) c.notes=[];
+    const noteText = sheet.querySelector('#vip-note').value.trim();
+    if(noteText) c.notes.push({ date: new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), text: noteText });
+    if(isNew) state.vipClients.push(c);
+    save(); closeSheet(); renderVipStats(); renderVipFilters(); renderVipList();
+    showSnackbar(isNew?'Client VIP ajouté.':'Client mis à jour.');
+  };
+  if(!isNew){
+    sheet.querySelector('#btn-vip-delete').onclick = ()=>{
+      if(!confirm(`Supprimer ${c.nom} ?`)) return;
+      state.vipClients = state.vipClients.filter(x=>x.id!==id);
+      save(); closeSheet(); renderVipStats(); renderVipFilters(); renderVipList();
+      showSnackbar('Client supprimé.');
+    };
+  }
+  sheet.querySelector('#sheet-close').onclick = closeSheet;
+  attachRipple(sheet);
+  openSheet();
+}
+/* =====================================================================
+   NAVIGATION
+   ===================================================================== */
+const VIEW_META = {
+  avis: { title:'Avis Google', sub:'Relance et suivi des avis clients' },
+  vip: { title:'VIP & Fidélité', sub:'Vos meilleurs clients' },
+  deuxieme: { title:'2nde Paire', sub:'Opportunités mutuelle à relancer' }
+};
+let currentView = 'avis';
+function showView(name){
+  currentView = name;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  document.getElementById('appbar-title').textContent = VIEW_META[name].title;
+  document.getElementById('appbar-sub').textContent = VIEW_META[name].sub;
+  window.scrollTo({top:0,behavior:'instant'});
+}
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.onclick = ()=> showView(btn.dataset.view);
+});
+document.getElementById('fab-add').onclick = ()=>{
+  if(currentView==='avis') openAvisSheet(null);
+  else if(currentView==='vip') openVipSheet(null);
+  else openDeuxiemeSheet(null);
+};
+document.getElementById('sheet-overlay').addEventListener('click', e=>{ if(e.target.id==='sheet-overlay') closeSheet(); });
+document.getElementById('btn-export-current').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `relances-clients-${todayKey()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showSnackbar('Export JSON téléchargé.');
+};
+
+function renderAll(){
+  renderAvisStats(); renderAvisFilters(); renderAvisList();
+  renderVipStats(); renderVipFilters(); renderVipList();
+  renderDeuxiemeStats(); renderDeuxiemeFilters(); renderDeuxiemeList();
+}
+renderAll();
+
+})();
+</script>
+</body>
+</html>
