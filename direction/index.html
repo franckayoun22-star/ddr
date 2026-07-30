@@ -539,6 +539,27 @@ textarea{resize:vertical;}
       </div>
       <div id="sommeil-chart"></div>
       <div id="sommeil-list"></div>
+
+      <div class="section-title">Rituel beauté & soin</div>
+      <div class="toolbar-inline">
+        <input type="text" class="inline-input" id="beaute-habit-input" placeholder="Nouveau rituel (ex : soin visage matin)">
+        <button class="inline-add" id="btn-beaute-habit-add">+</button>
+      </div>
+      <div id="beaute-habit-list"></div>
+
+      <div class="section-title">Jambes & circulation</div>
+      <div class="card" style="border-color:var(--orange);margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--dim);line-height:1.5;">⚠️ Privilégie le mouvement doux et régulier plutôt que la station debout prolongée ou l'effort intense. En cas de gonflement qui s'aggrave ou de douleur, consulte ton médecin.</div>
+      </div>
+      <div class="toolbar-inline">
+        <input type="text" class="inline-input" id="jambes-habit-input" placeholder="Nouvelle habitude (ex : bas de contention)">
+        <button class="inline-add" id="btn-jambes-habit-add">+</button>
+      </div>
+      <div id="jambes-habit-list"></div>
+      <div class="field-label">Gêne aux jambes aujourd'hui</div>
+      <div class="satisfaction-row" id="jambes-gene-row"></div>
+      <div id="jambes-chart" style="margin-top:10px;"></div>
+      <div id="jambes-log-list"></div>
     </div>
   </div>
 
@@ -766,6 +787,7 @@ const DEFAULT_STATE = {
   categories: [], transactions: [],
   objectifsSport: [],
   rdvSante: [], poids: [], sommeil: [],
+  habitudesBeaute: [], habitudesJambes: [], jambesLog: [],
   habitudes: [], objectifsPerso: [], journalPerso: [],
   couplePoints: [], maisonTickets: [],
   programme10: { startDate: null, done: {} },
@@ -2498,34 +2520,42 @@ function renderDevTabs(){
 }
 /* --- Habitudes --- */
 function last7Days(){ const arr=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); arr.push(d);} return arr; }
-function renderHabitList(){
-  const wrap = document.getElementById('habit-list');
-  if(state.habitudes.length===0){ wrap.innerHTML = `<div class="empty-state">Aucune habitude. Ajoute-en une ci-dessus.</div>`; return; }
+function renderHabitGroup(list, containerId, xpAmount, icon){
+  const wrap = document.getElementById(containerId);
+  if(list.length===0){ wrap.innerHTML = `<div class="empty-state">Aucune habitude pour l’instant.</div>`; return; }
   const days = last7Days();
-  wrap.innerHTML = state.habitudes.map(h=>{
+  wrap.innerHTML = list.map(h=>{
     const streak = habitStreak(h);
     const dayBtns = days.map(d=>{
       const key = dateKeyFromDate(d);
       const done = h.historique.includes(key);
       const lbl = d.toLocaleDateString('fr-FR',{weekday:'narrow'});
-      return `<div class="habit-day"><span class="habit-day-lbl">${lbl}</span><button class="habit-day-btn ${done?'done':''}" data-habit="${h.id}" data-key="${key}">${done?'✓':''}</button></div>`;
+      return `<div class="habit-day"><span class="habit-day-lbl">${lbl}</span><button class="habit-day-btn ${done?'done':''}" data-hid="${h.id}" data-key="${key}">${done?'✓':''}</button></div>`;
     }).join('');
-    return `<div class="habit-card"><div class="habit-top"><span class="habit-name">${escapeHtml(h.nom)}</span><span class="habit-streak">${streak>0?'🔥 '+streak+'j':''}</span><button class="mini-del" data-del-habit="${h.id}">✕</button></div><div class="habit-days">${dayBtns}</div></div>`;
+    return `<div class="habit-card"><div class="habit-top"><span class="habit-name">${escapeHtml(h.nom)}</span><span class="habit-streak">${streak>0?'🔥 '+streak+'j':''}</span><button class="mini-del" data-delid="${h.id}">✕</button></div><div class="habit-days">${dayBtns}</div></div>`;
   }).join('');
   wrap.querySelectorAll('.habit-day-btn').forEach(btn=>{
     btn.onclick = ()=>{
-      const h = state.habitudes.find(x=>x.id===btn.dataset.habit);
+      const h = list.find(x=>x.id===btn.dataset.hid);
       const key = btn.dataset.key;
       const idx = h.historique.indexOf(key);
       if(idx>=0) h.historique.splice(idx,1);
-      else { h.historique.push(key); gainXp(3); journalPDGPush('🔥', `Habitude cochée : ${h.nom}.`); }
+      else { h.historique.push(key); gainXp(xpAmount); journalPDGPush(icon, `Habitude cochée : ${h.nom}.`); }
       save(); renderAll();
     };
   });
-  wrap.querySelectorAll('[data-del-habit]').forEach(btn=>{
-    btn.onclick = ()=>{ if(!confirm('Supprimer cette habitude ?')) return; state.habitudes = state.habitudes.filter(x=>x.id!==btn.dataset.delHabit); save(); renderAll(); };
+  wrap.querySelectorAll('[data-delid]').forEach(btn=>{
+    btn.onclick = ()=>{
+      if(!confirm('Supprimer cette habitude ?')) return;
+      const idx = list.findIndex(x=>x.id===btn.dataset.delid);
+      if(idx>=0) list.splice(idx,1);
+      save(); renderAll();
+    };
   });
 }
+function renderHabitList(){ renderHabitGroup(state.habitudes, 'habit-list', 3, '🔥'); }
+function renderBeauteHabitList(){ renderHabitGroup(state.habitudesBeaute, 'beaute-habit-list', 2, '💅'); }
+function renderJambesHabitList(){ renderHabitGroup(state.habitudesJambes, 'jambes-habit-list', 2, '🦵'); }
 document.getElementById('btn-habit-add').onclick = ()=>{
   const inp = document.getElementById('habit-input');
   const nom = inp.value.trim();
@@ -2534,6 +2564,48 @@ document.getElementById('btn-habit-add').onclick = ()=>{
   inp.value='';
   save(); renderAll();
 };
+document.getElementById('btn-beaute-habit-add').onclick = ()=>{
+  const inp = document.getElementById('beaute-habit-input');
+  const nom = inp.value.trim();
+  if(!nom) return;
+  state.habitudesBeaute.push({ id: uid(), nom, historique: [], dateCreation: Date.now() });
+  inp.value='';
+  save(); renderAll();
+};
+document.getElementById('btn-jambes-habit-add').onclick = ()=>{
+  const inp = document.getElementById('jambes-habit-input');
+  const nom = inp.value.trim();
+  if(!nom) return;
+  state.habitudesJambes.push({ id: uid(), nom, historique: [], dateCreation: Date.now() });
+  inp.value='';
+  save(); renderAll();
+};
+function renderJambesGeneRow(){
+  const row = document.getElementById('jambes-gene-row');
+  const key = todayKey();
+  const todayEntry = state.jambesLog.find(j=>j.date===key);
+  row.innerHTML = '';
+  const labels = ['😊','🙂','😐','😣','😖'];
+  [1,2,3,4,5].forEach((n,i)=>{
+    const b = document.createElement('button');
+    b.textContent = labels[i];
+    b.className = todayEntry && todayEntry.niveau===n ? 'active' : '';
+    b.onclick = ()=>{
+      let entry = state.jambesLog.find(j=>j.date===key);
+      if(!entry){ entry = { date:key, niveau:n, ts:Date.now() }; state.jambesLog.push(entry); }
+      else { entry.niveau = n; }
+      save(); renderAll();
+    };
+    row.appendChild(b);
+  });
+}
+function renderJambesChart(){
+  const ordered = state.jambesLog.slice().sort((a,b)=>a.ts-b.ts);
+  document.getElementById('jambes-chart').innerHTML = sparklineSvg(ordered.slice(-15).map(j=>j.niveau), 'var(--orange)');
+  const listWrap = document.getElementById('jambes-log-list');
+  const recents = ordered.slice().reverse().slice(0,8);
+  listWrap.innerHTML = recents.length ? recents.map(j=>`<div class="mini-list-item"><span>${fmtDateShort(j.ts)}</span><span>Gêne : ${j.niveau}/5</span></div>`).join('') : `<div class="empty-state">Aucun relevé pour l’instant.</div>`;
+}
 /* --- Objectifs perso --- */
 function renderObjPersoList(){
   const wrap = document.getElementById('objperso-list');
@@ -2791,6 +2863,7 @@ function renderAll(){
   renderGolfStats(); renderGolfList(); renderWeekPlan(); renderRecetteFilters(); renderRecetteList();
   renderLivreStats(); renderLivreFilters(); renderLivreList(); renderProgramme10(); renderSportStats(); renderObjSportList();
   renderHabitList(); renderObjPersoList(); renderJournalPersoDept();
+  renderBeauteHabitList(); renderJambesHabitList(); renderJambesGeneRow(); renderJambesChart();
   renderJobStats(); renderJobFilters(); renderJobList();
 }
 
