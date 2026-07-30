@@ -164,6 +164,13 @@ textarea{resize:vertical;}
     <div class="client-list" id="deuxieme-list"></div>
   </div>
 
+  <!-- ============ VUE ORDONNANCES ============ -->
+  <div class="content view" id="view-ordonnances">
+    <div class="stats-row" id="ord-stats"></div>
+    <div class="chip-row" id="ord-filter-row"></div>
+    <div class="client-list" id="ord-list"></div>
+  </div>
+
   <button class="fab" id="fab-add">＋</button>
 
   <div class="bottom-nav">
@@ -171,6 +178,7 @@ textarea{resize:vertical;}
       <button class="nav-btn active" data-view="avis"><span class="nav-ic">⭐</span><span class="nav-txt">Avis Google</span></button>
       <button class="nav-btn" data-view="vip"><span class="nav-ic">💎</span><span class="nav-txt">VIP</span></button>
       <button class="nav-btn" data-view="deuxieme"><span class="nav-ic">👓</span><span class="nav-txt">2nde Paire</span></button>
+      <button class="nav-btn" data-view="ordonnances"><span class="nav-ic">📋</span><span class="nav-txt">Ordonnances</span></button>
     </div>
   </div>
 
@@ -186,7 +194,7 @@ textarea{resize:vertical;}
 (function(){
 
 const STORAGE_KEY = 'opticien_relances_v1';
-const DEFAULT_STATE = { avisClients: [], vipClients: [], deuxiemePaireClients: [] };
+const DEFAULT_STATE = { avisClients: [], vipClients: [], deuxiemePaireClients: [], ordonnancesClients: [] };
 function load(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -466,6 +474,125 @@ function openDeuxiemeSheet(id){
 }
 
 /* =====================================================================
+   ORDONNANCES (renouvellement)
+   ===================================================================== */
+const DUREES_VALIDITE = [ {key:1,label:'1 an'}, {key:3,label:'3 ans'}, {key:5,label:'5 ans'} ];
+function dateExpirationOrdonnance(c){
+  const d = new Date(c.dateOrdonnance);
+  d.setFullYear(d.getFullYear()+c.dureeAns);
+  return d.getTime();
+}
+function ordStatut(c){
+  const exp = dateExpirationOrdonnance(c);
+  const joursRestants = Math.ceil((exp-Date.now())/(24*3600*1000));
+  if(joursRestants<0) return 'expiree';
+  if(joursRestants<=60) return 'a_renouveler';
+  return 'valide';
+}
+const ORD_STATUTS = [ {key:'a_renouveler',label:'À renouveler',cls:'b-amber'}, {key:'expiree',label:'Expirée',cls:'b-red'}, {key:'valide',label:'Valide',cls:'b-green'} ];
+let ordFiltre = 'a_renouveler';
+function filteredOrd(){
+  let list = state.ordonnancesClients;
+  if(ordFiltre!=='tous') list = list.filter(c=>ordStatut(c)===ordFiltre);
+  return list.slice().sort((a,b)=>dateExpirationOrdonnance(a)-dateExpirationOrdonnance(b));
+}
+function renderOrdStats(){
+  const wrap = document.getElementById('ord-stats');
+  const total = state.ordonnancesClients.length;
+  const aRenouveler = state.ordonnancesClients.filter(c=>ordStatut(c)==='a_renouveler').length;
+  const expiree = state.ordonnancesClients.filter(c=>ordStatut(c)==='expiree').length;
+  const valide = state.ordonnancesClients.filter(c=>ordStatut(c)==='valide').length;
+  wrap.innerHTML = [
+    { n: aRenouveler, l:'À renouveler' }, { n: expiree, l:'Expirées' }, { n: valide, l:'Valides' }, { n: total, l:'Total' }
+  ].map(i=>`<div class="stat-card"><div class="stat-num">${i.n}</div><div class="stat-label">${i.l}</div></div>`).join('');
+}
+function renderOrdFilters(){
+  const wrap = document.getElementById('ord-filter-row');
+  const chips = [...ORD_STATUTS.map(s=>({key:s.key,label:s.label})), {key:'tous',label:'Tous'}];
+  wrap.innerHTML = '';
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'chip'+(ordFiltre===c.key?' active':'');
+    b.textContent = c.label;
+    b.onclick = ()=>{ ordFiltre=c.key; renderOrdList(); renderOrdFilters(); };
+    wrap.appendChild(b);
+  });
+}
+function renderOrdList(){
+  const wrap = document.getElementById('ord-list');
+  const list = filteredOrd();
+  if(list.length===0){ wrap.innerHTML = `<div class="empty-state">Aucun client ici. Touche + pour en ajouter un.</div>`; return; }
+  wrap.innerHTML = '';
+  list.forEach(c=>{
+    const st = ORD_STATUTS.find(s=>s.key===ordStatut(c));
+    const exp = dateExpirationOrdonnance(c);
+    const el = document.createElement('div');
+    el.className = 'client-card';
+    el.setAttribute('data-ripple',''); el.dataset.rippleDark='1';
+    el.innerHTML = `
+      <div class="client-top"><span class="client-name">${escapeHtml(c.nom)}</span><span class="badge ${st.cls}">${st.label}</span></div>
+      <div class="client-meta"><span>Ordonnance : ${fmtDateShort(c.dateOrdonnance)}</span><span>Expire : ${fmtDateShort(exp)}</span></div>
+    `;
+    el.onclick = ()=> openOrdSheet(c.id);
+    wrap.appendChild(el);
+    attachRipple(wrap);
+  });
+}
+function openOrdSheet(id){
+  const isNew = !id;
+  const c = isNew ? { id: uid(), nom:'', telephone:'', dateOrdonnance: Date.now(), dureeAns: 3, notes:'' } : state.ordonnancesClients.find(x=>x.id===id);
+  const sheet = document.getElementById('sheet-content');
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><div class="sheet-title">${isNew?'Nouvelle ordonnance':'Ordonnance'}</div><button class="sheet-close" id="sheet-close">✕</button></div>
+    <div class="field-label" style="margin-top:0;">Nom</div>
+    <input type="text" id="ord-nom" value="${escapeHtml(c.nom)}" placeholder="Nom du client">
+    <div class="field-label">Téléphone (optionnel)</div>
+    <input type="tel" id="ord-tel" value="${escapeHtml(c.telephone)}" placeholder="06...">
+    <div class="field-label">Date de l'ordonnance</div>
+    <input type="date" id="ord-date" value="${dateKeyFromDate(new Date(c.dateOrdonnance))}">
+    <div class="field-label">Durée de validité</div>
+    <div class="select-row" id="ord-duree-row"></div>
+    <div class="field-label">Notes (optionnel)</div>
+    <textarea id="ord-notes" rows="2">${escapeHtml(c.notes||'')}</textarea>
+    <button class="btn" id="btn-ord-save" data-ripple>${isNew?'Ajouter':'Enregistrer'}</button>
+    ${!isNew ? `<button class="btn text-danger" id="btn-ord-delete" data-ripple>Supprimer ce client</button>` : ''}
+  `;
+  let dureeChoisie = c.dureeAns;
+  const dureeRow = sheet.querySelector('#ord-duree-row');
+  DUREES_VALIDITE.forEach(d=>{
+    const b = document.createElement('button');
+    b.className = 'select-opt'+(dureeChoisie===d.key?' active':'');
+    b.textContent = d.label;
+    b.onclick = ()=>{ dureeChoisie=d.key; dureeRow.querySelectorAll('.select-opt').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+    dureeRow.appendChild(b);
+  });
+  sheet.querySelector('#btn-ord-save').onclick = ()=>{
+    const nom = sheet.querySelector('#ord-nom').value.trim();
+    if(!nom){ alert('Le nom est requis.'); return; }
+    c.nom = nom;
+    c.telephone = sheet.querySelector('#ord-tel').value.trim();
+    c.dateOrdonnance = tsFromDateInput(sheet.querySelector('#ord-date').value);
+    c.dureeAns = dureeChoisie;
+    c.notes = sheet.querySelector('#ord-notes').value.trim();
+    if(isNew) state.ordonnancesClients.push(c);
+    save(); closeSheet(); renderOrdStats(); renderOrdFilters(); renderOrdList();
+    showSnackbar(isNew?'Client ajouté.':'Client mis à jour.');
+  };
+  if(!isNew){
+    sheet.querySelector('#btn-ord-delete').onclick = ()=>{
+      if(!confirm(`Supprimer ${c.nom} ?`)) return;
+      state.ordonnancesClients = state.ordonnancesClients.filter(x=>x.id!==id);
+      save(); closeSheet(); renderOrdStats(); renderOrdFilters(); renderOrdList();
+      showSnackbar('Client supprimé.');
+    };
+  }
+  sheet.querySelector('#sheet-close').onclick = closeSheet;
+  attachRipple(sheet);
+  openSheet();
+}
+
+/* =====================================================================
    VIP / FIDELITE
    ===================================================================== */
 function anniversaireProche(c){
@@ -587,7 +714,8 @@ function openVipSheet(id){
 const VIEW_META = {
   avis: { title:'Avis Google', sub:'Relance et suivi des avis clients' },
   vip: { title:'VIP & Fidélité', sub:'Vos meilleurs clients' },
-  deuxieme: { title:'2nde Paire', sub:'Opportunités mutuelle à relancer' }
+  deuxieme: { title:'2nde Paire', sub:'Opportunités mutuelle à relancer' },
+  ordonnances: { title:'Ordonnances', sub:'Renouvellements à anticiper' }
 };
 let currentView = 'avis';
 function showView(name){
@@ -605,7 +733,8 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
 document.getElementById('fab-add').onclick = ()=>{
   if(currentView==='avis') openAvisSheet(null);
   else if(currentView==='vip') openVipSheet(null);
-  else openDeuxiemeSheet(null);
+  else if(currentView==='deuxieme') openDeuxiemeSheet(null);
+  else openOrdSheet(null);
 };
 document.getElementById('sheet-overlay').addEventListener('click', e=>{ if(e.target.id==='sheet-overlay') closeSheet(); });
 document.getElementById('btn-export-current').onclick = ()=>{
@@ -622,6 +751,7 @@ function renderAll(){
   renderAvisStats(); renderAvisFilters(); renderAvisList();
   renderVipStats(); renderVipFilters(); renderVipList();
   renderDeuxiemeStats(); renderDeuxiemeFilters(); renderDeuxiemeList();
+  renderOrdStats(); renderOrdFilters(); renderOrdList();
 }
 renderAll();
 
