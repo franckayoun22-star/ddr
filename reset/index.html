@@ -313,6 +313,19 @@
   .flash-meta { font-size: 0.72rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; }
   .flash-status { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 999px; width: fit-content; }
 
+  /* ---- Actions / exercise guidance ---- */
+  .actions-list { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 420px; margin-top: 2px; text-align: left; }
+  .action-row { display: flex; gap: 12px; align-items: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
+  .a-icon { flex-shrink: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+  .a-label { font-weight: 700; font-size: 0.86rem; }
+  .a-detail { font-size: 0.76rem; color: var(--ink-faint); margin-top: 1px; line-height: 1.3; }
+
+  /* ---- Movement guide ---- */
+  .guide-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .guide-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+  .guide-name { font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.02em; }
+  .guide-cue { font-size: 0.7rem; color: var(--ink-faint); line-height: 1.3; }
+
   .quote { font-size: 0.85rem; color: var(--ink-faint); font-style: italic; text-align: center; }
 
   footer.credit { text-align: center; font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.04em; margin-top: 4px; }
@@ -341,49 +354,132 @@
   var WINDOW_START_H = 10, WINDOW_START_M = 0;
 
   var STEPS = [
-    { title: "Réveil corporel & hydratation", cat: "detox", zone: "rest", min: 20, tip: "Debout. Deux grands verres d'eau, un citron pressé dedans. Pas de café avant la fin de cette étape." },
-    { title: "Étirements dynamiques / mobilité", cat: "sport", zone: "mobility", min: 15, tip: "Chevilles, hanches, épaules. Amplitude progressive, tu réveilles les articulations avant l'effort." },
-    { title: "Cardio intense", cat: "sport", zone: "full", min: 45, tip: "Fréquence cardiaque haute tout du long. Course, corde à sauter, vélo — ce que tu as sous la main, à fond." },
-    { title: "Pause hydratation & respiration", cat: "repos", zone: "rest", min: 10, tip: "Un grand verre d'eau. 10 respirations lentes, nez, ventre qui se gonfle. Pouls qui redescend." },
-    { title: "Renforcement haut du corps", cat: "sport", zone: "upper", min: 45, tip: "Pompes, dips, tirages. Séries jusqu'à l'échec technique, pas jusqu'à l'abandon mental." },
-    { title: "Étirements + douche", cat: "repos", zone: "mobility", min: 15, tip: "Étire ce que tu viens de travailler. Douche fraîche en fin de séquence — ça réveille et ça draine." },
-    { title: "Déjeuner détox", cat: "detox", zone: "rest", min: 45, tip: "Légumes, protéine maigre, pas de sucre transformé, pas d'écran devant l'assiette. Mange lentement." },
-    { title: "Marche digestive extérieure", cat: "sport", zone: "full", min: 30, tip: "Dehors, pas de téléphone en main. Rythme soutenu, bras qui bougent, tu digères en avançant." },
-    { title: "Pause / respiration", cat: "repos", zone: "rest", min: 30, tip: "Assieds-toi, ferme les yeux si tu veux. Pas d'écran. C'est une vraie pause, pas un scroll." },
-    { title: "Renforcement bas du corps", cat: "sport", zone: "lower", min: 45, tip: "Squats, fentes, chaise. Jambes qui tremblent à la fin, c'est le signal que ça compte." },
-    { title: "Collation détox + hydratation", cat: "detox", zone: "rest", min: 15, tip: "Fruits frais ou oléagineux, un grand verre d'eau. Rien de transformé, rien de sucré." },
-    { title: "Cardio léger / marche rapide", cat: "sport", zone: "full", min: 45, tip: "Intensité modérée mais continue. Zone où tu peux encore parler mais pas chanter." },
-    { title: "Yoga / mobilité / relâchement", cat: "sport", zone: "mobility", min: 30, tip: "Postures tenues, respiration lente. Tu relâches les tensions accumulées dans la journée." },
-    { title: "Pause détox (infusion, fruits)", cat: "detox", zone: "rest", min: 15, tip: "Infusion sans sucre, fruits frais. Cinq minutes debout à la fenêtre, loin de l'écran." },
-    { title: "Circuit training complet", cat: "sport", zone: "full", min: 45, tip: "Corps entier, enchaîné, peu de repos entre les exercices. La dernière grosse dépense de la journée." },
-    { title: "Étirements finaux + douche", cat: "repos", zone: "mobility", min: 20, tip: "Étirements longs et lents sur tout le corps. Douche pour clore l'effort physique du jour." },
-    { title: "Préparation + dîner détox", cat: "detox", zone: "rest", min: 40, tip: "Cuisine léger : légumes, bonnes protéines. Prépare, mange assis, sans écran." },
-    { title: "Bilan du jour & planification lendemain", cat: "repos", zone: "rest", min: 30, tip: "Note ce qui a marché, ce qui a coincé. Prépare tes affaires de sport pour demain, maintenant." }
+    { title: "Réveil corporel & hydratation", cat: "detox", zone: "rest", min: 20, tip: "Debout. Deux grands verres d'eau, un citron pressé dedans. Pas de café avant la fin de cette étape.", actions: [
+      { label: "2 grands verres d'eau citronnée", detail: "Bois lentement, debout.", pose: "drink" },
+      { label: "10 rotations d'épaules + 10 de nuque", detail: "Amplitude douce, tu réveilles le haut du corps.", pose: "stretch" }
+    ] },
+    { title: "Étirements dynamiques / mobilité", cat: "sport", zone: "mobility", min: 15, tip: "Chevilles, hanches, épaules. Amplitude progressive, tu réveilles les articulations avant l'effort.", actions: [
+      { label: "15 cercles de hanches, chaque sens", detail: "Mains sur les hanches, amplitude progressive.", pose: "stretch" },
+      { label: "15 montées de genoux sur place", detail: "Rythme modéré, tu prépares le cardio.", pose: "run" }
+    ] },
+    { title: "Cardio intense", cat: "sport", zone: "full", min: 45, tip: "Fréquence cardiaque haute tout du long. Course, corde à sauter, vélo — ce que tu as sous la main, à fond.", actions: [
+      { label: "4 x 5 min course ou vélo", detail: "Allure soutenue, 1 min de marche entre chaque bloc.", pose: "run" },
+      { label: "3 x 1 min jumping jacks", detail: "Le plus vite possible en gardant la forme.", pose: "jumpingjack" }
+    ] },
+    { title: "Pause hydratation & respiration", cat: "repos", zone: "rest", min: 10, tip: "Un grand verre d'eau. 10 respirations lentes, nez, ventre qui se gonfle. Pouls qui redescend.", actions: [
+      { label: "1 grand verre d'eau", detail: "À petites gorgées.", pose: "drink" },
+      { label: "10 respirations profondes", detail: "4 secondes inspiration, 6 secondes expiration.", pose: "breathe" }
+    ] },
+    { title: "Renforcement haut du corps", cat: "sport", zone: "upper", min: 45, tip: "Pompes, dips, tirages. Séries jusqu'à l'échec technique, pas jusqu'à l'abandon mental.", actions: [
+      { label: "4 x 12 pompes", detail: "Genoux au sol si besoin, dos droit, coudes à 45°.", pose: "pushup" },
+      { label: "4 x 15 dips sur chaise", detail: "Coudes proches du corps, descends jusqu'à 90°.", pose: "dip" }
+    ] },
+    { title: "Étirements + douche", cat: "repos", zone: "mobility", min: 15, tip: "Étire ce que tu viens de travailler. Douche fraîche en fin de séquence — ça réveille et ça draine.", actions: [
+      { label: "Étirement pectoraux + triceps", detail: "20 secondes par côté, respiration lente.", pose: "stretch" },
+      { label: "Douche fraîche 2 minutes", detail: "Termine par 30 secondes d'eau froide.", pose: "breathe" }
+    ] },
+    { title: "Déjeuner détox", cat: "detox", zone: "rest", min: 45, tip: "Légumes, protéine maigre, pas de sucre transformé, pas d'écran devant l'assiette. Mange lentement.", actions: [
+      { label: "Assiette : légumes + protéine maigre", detail: "Poulet, poisson ou légumineuses, moitié assiette de légumes.", pose: "eat" },
+      { label: "0 sucre transformé, 0 écran", detail: "Mange assis, lentement, 20 minutes minimum.", pose: "eat" }
+    ] },
+    { title: "Marche digestive extérieure", cat: "sport", zone: "full", min: 30, tip: "Dehors, pas de téléphone en main. Rythme soutenu, bras qui bougent, tu digères en avançant.", actions: [
+      { label: "30 min de marche dehors", detail: "Rythme soutenu, bras qui bougent, pas de téléphone.", pose: "walk" }
+    ] },
+    { title: "Pause / respiration", cat: "repos", zone: "rest", min: 30, tip: "Assieds-toi, ferme les yeux si tu veux. Pas d'écran. C'est une vraie pause, pas un scroll.", actions: [
+      { label: "10 minutes assis, yeux fermés", detail: "Pas d'écran, juste respirer.", pose: "breathe" },
+      { label: "5 respirations profondes, répétées", detail: "Reste immobile entre les deux.", pose: "breathe" }
+    ] },
+    { title: "Renforcement bas du corps", cat: "sport", zone: "lower", min: 45, tip: "Squats, fentes, chaise. Jambes qui tremblent à la fin, c'est le signal que ça compte.", actions: [
+      { label: "4 x 15 squats", detail: "Fesses en arrière, genoux dans l'axe des pieds.", pose: "squat" },
+      { label: "4 x 12 fentes par jambe", detail: "Descends jusqu'à ce que le genou arrière frôle le sol.", pose: "lunge" },
+      { label: "3 x 30 sec chaise contre le mur", detail: "Cuisses parallèles au sol, tiens la position.", pose: "squat" }
+    ] },
+    { title: "Collation détox + hydratation", cat: "detox", zone: "rest", min: 15, tip: "Fruits frais ou oléagineux, un grand verre d'eau. Rien de transformé, rien de sucré.", actions: [
+      { label: "Fruits frais ou oléagineux", detail: "Une poignée d'amandes ou une pomme.", pose: "eat" },
+      { label: "1 grand verre d'eau", detail: "Rien de transformé, rien de sucré.", pose: "drink" }
+    ] },
+    { title: "Cardio léger / marche rapide", cat: "sport", zone: "full", min: 45, tip: "Intensité modérée mais continue. Zone où tu peux encore parler mais pas chanter.", actions: [
+      { label: "45 min marche rapide ou vélo souple", detail: "Zone où tu peux parler mais pas chanter.", pose: "walk" }
+    ] },
+    { title: "Yoga / mobilité / relâchement", cat: "sport", zone: "mobility", min: 30, tip: "Postures tenues, respiration lente. Tu relâches les tensions accumulées dans la journée.", actions: [
+      { label: "5 postures tenues, 1 min chacune", detail: "Chat-vache, chien tête en bas, torsion assise, cobra, enfant.", pose: "yoga" },
+      { label: "Respiration lente entre chaque posture", detail: "Tu relâches ce que tu viens de travailler.", pose: "breathe" }
+    ] },
+    { title: "Pause détox (infusion, fruits)", cat: "detox", zone: "rest", min: 15, tip: "Infusion sans sucre, fruits frais. Cinq minutes debout à la fenêtre, loin de l'écran.", actions: [
+      { label: "Infusion sans sucre", detail: "Menthe, gingembre ou verveine.", pose: "drink" },
+      { label: "Fruits frais", detail: "5 minutes debout à la fenêtre, loin de l'écran.", pose: "eat" }
+    ] },
+    { title: "Circuit training complet", cat: "sport", zone: "full", min: 45, tip: "Corps entier, enchaîné, peu de repos entre les exercices. La dernière grosse dépense de la journée.", actions: [
+      { label: "5 tours : 15 squats, 10 pompes, 30 sec planche, 15 fentes", detail: "Peu de repos entre les exercices, enchaîne.", pose: "mountainclimber" },
+      { label: "1 min de repos entre chaque tour", detail: "Le strict nécessaire pour reprendre ton souffle.", pose: "breathe" }
+    ] },
+    { title: "Étirements finaux + douche", cat: "repos", zone: "mobility", min: 20, tip: "Étirements longs et lents sur tout le corps. Douche pour clore l'effort physique du jour.", actions: [
+      { label: "Étirements 30 sec par groupe musculaire", detail: "Jambes, dos, épaules — tout le corps.", pose: "stretch" },
+      { label: "Douche pour clore l'effort", detail: "Termine par de l'eau fraîche.", pose: "breathe" }
+    ] },
+    { title: "Préparation + dîner détox", cat: "detox", zone: "rest", min: 40, tip: "Cuisine léger : légumes, bonnes protéines. Prépare, mange assis, sans écran.", actions: [
+      { label: "Cuisine légère : légumes + bonnes protéines", detail: "Poisson, œufs ou légumineuses.", pose: "eat" },
+      { label: "Mange assis, sans écran", detail: "20 minutes minimum, mastique lentement.", pose: "eat" }
+    ] },
+    { title: "Bilan du jour & planification lendemain", cat: "repos", zone: "rest", min: 30, tip: "Note ce qui a marché, ce qui a coincé. Prépare tes affaires de sport pour demain, maintenant.", actions: [
+      { label: "Note ce qui a marché, ce qui a coincé", detail: "3 lignes suffisent.", pose: "note" },
+      { label: "Prépare tes affaires de sport pour demain", detail: "Fais-le maintenant, pas demain matin.", pose: "note" }
+    ] }
   ];
 
   var FLASH_SESSIONS = [
     { id: "cardio", title: "Cardio Flash", icon: "full", blurb: "Monte le rythme, transpire, c'est tout.", steps: [
-      { title: "Échauffement articulaire", cat: "sport", zone: "mobility", min: 8, tip: "Chevilles, genoux, hanches, épaules — réveille les articulations avant de lancer le rythme." },
-      { title: "Cardio intense continu", cat: "sport", zone: "full", min: 35, tip: "Course, corde à sauter, vélo — à fond, sans t'arrêter jusqu'à la fin du chrono." },
-      { title: "Retour au calme + étirements", cat: "repos", zone: "mobility", min: 12, tip: "Ralentis progressivement, étire les jambes et le dos pendant que le pouls redescend." },
-      { title: "Hydratation", cat: "detox", zone: "rest", min: 5, tip: "Grand verre d'eau, quelques respirations lentes pour clore la séance." }
+      { title: "Échauffement articulaire", cat: "sport", zone: "mobility", min: 8, tip: "Chevilles, genoux, hanches, épaules — réveille les articulations avant de lancer le rythme.", actions: [
+        { label: "10 rotations chevilles / genoux / hanches / épaules", detail: "Amplitude progressive.", pose: "stretch" }
+      ] },
+      { title: "Cardio intense continu", cat: "sport", zone: "full", min: 35, tip: "Course, corde à sauter, vélo — à fond, sans t'arrêter jusqu'à la fin du chrono.", actions: [
+        { label: "Course, corde à sauter ou vélo à fond", detail: "35 minutes sans t'arrêter.", pose: "run" }
+      ] },
+      { title: "Retour au calme + étirements", cat: "repos", zone: "mobility", min: 12, tip: "Ralentis progressivement, étire les jambes et le dos pendant que le pouls redescend.", actions: [
+        { label: "Marche lente 5 min puis étirements", detail: "20 secondes par groupe musculaire.", pose: "stretch" }
+      ] },
+      { title: "Hydratation", cat: "detox", zone: "rest", min: 5, tip: "Grand verre d'eau, quelques respirations lentes pour clore la séance.", actions: [
+        { label: "Grand verre d'eau + respirations lentes", detail: "Tu clôtures la séance.", pose: "drink" }
+      ] }
     ]},
     { id: "renfo", title: "Renfo Complet", icon: "upper", blurb: "Haut, bas, gainage. Le combo qui fait mal aux bons endroits.", steps: [
-      { title: "Mobilité générale", cat: "sport", zone: "mobility", min: 8, tip: "Rotations d'épaules, de hanches, de chevilles — tu prépares le terrain." },
-      { title: "Haut du corps", cat: "sport", zone: "upper", min: 20, tip: "Pompes, dips, tirages — séries jusqu'à l'échec technique, pas jusqu'à l'abandon mental." },
-      { title: "Bas du corps", cat: "sport", zone: "lower", min: 20, tip: "Squats, fentes, chaise — jambes qui tremblent à la fin, c'est le signal que ça compte." },
-      { title: "Gainage", cat: "sport", zone: "core", min: 7, tip: "Planche, gainage latéral — le tronc qui tient bon jusqu'au bout." },
-      { title: "Étirements", cat: "repos", zone: "mobility", min: 5, tip: "Étire tout ce que tu viens de travailler avant de t'arrêter." }
+      { title: "Mobilité générale", cat: "sport", zone: "mobility", min: 8, tip: "Rotations d'épaules, de hanches, de chevilles — tu prépares le terrain.", actions: [
+        { label: "Rotations épaules / hanches / chevilles", detail: "8 minutes, amplitude croissante.", pose: "stretch" }
+      ] },
+      { title: "Haut du corps", cat: "sport", zone: "upper", min: 20, tip: "Pompes, dips, tirages — séries jusqu'à l'échec technique, pas jusqu'à l'abandon mental.", actions: [
+        { label: "4 x 12 pompes + 4 x 12 tirages", detail: "Jusqu'à l'échec technique.", pose: "pushup" }
+      ] },
+      { title: "Bas du corps", cat: "sport", zone: "lower", min: 20, tip: "Squats, fentes, chaise — jambes qui tremblent à la fin, c'est le signal que ça compte.", actions: [
+        { label: "4 x 15 squats + 4 x 12 fentes", detail: "Jambes qui tremblent à la fin.", pose: "squat" }
+      ] },
+      { title: "Gainage", cat: "sport", zone: "core", min: 7, tip: "Planche, gainage latéral — le tronc qui tient bon jusqu'au bout.", actions: [
+        { label: "3 x 40 sec planche + 3 x 20 sec gainage latéral", detail: "Le tronc qui tient bon.", pose: "plank" }
+      ] },
+      { title: "Étirements", cat: "repos", zone: "mobility", min: 5, tip: "Étire tout ce que tu viens de travailler avant de t'arrêter.", actions: [
+        { label: "Étirements complets", detail: "5 minutes, tout ce que tu viens de travailler.", pose: "stretch" }
+      ] }
     ]},
     { id: "detox", title: "Reset Détox", icon: "rest", blurb: "Hydratation, marche, respiration. Léger mais efficace.", steps: [
-      { title: "Hydratation + respiration", cat: "detox", zone: "rest", min: 10, tip: "Grand verre d'eau, respiration lente et profonde, ventre qui se gonfle." },
-      { title: "Marche rapide extérieure", cat: "sport", zone: "full", min: 35, tip: "Dehors, pas de téléphone en main, rythme soutenu, bras qui bougent." },
-      { title: "Étirements doux", cat: "repos", zone: "mobility", min: 15, tip: "Étirements lents, sans forcer, sur tout le corps." }
+      { title: "Hydratation + respiration", cat: "detox", zone: "rest", min: 10, tip: "Grand verre d'eau, respiration lente et profonde, ventre qui se gonfle.", actions: [
+        { label: "Grand verre d'eau + respiration lente", detail: "Ventre qui se gonfle.", pose: "drink" }
+      ] },
+      { title: "Marche rapide extérieure", cat: "sport", zone: "full", min: 35, tip: "Dehors, pas de téléphone en main, rythme soutenu, bras qui bougent.", actions: [
+        { label: "35 min de marche rapide dehors", detail: "Pas de téléphone en main.", pose: "walk" }
+      ] },
+      { title: "Étirements doux", cat: "repos", zone: "mobility", min: 15, tip: "Étirements lents, sans forcer, sur tout le corps.", actions: [
+        { label: "Étirements lents", detail: "15 minutes, sans forcer, tout le corps.", pose: "stretch" }
+      ] }
     ]},
     { id: "mobilite", title: "Mobilité & Relâchement", icon: "mobility", blurb: "Zéro impact, tension qui part.", steps: [
-      { title: "Respiration guidée", cat: "detox", zone: "rest", min: 10, tip: "Assis ou allongé, respiration lente, yeux fermés si tu veux." },
-      { title: "Yoga / postures tenues", cat: "sport", zone: "mobility", min: 35, tip: "Postures tenues, respiration lente, tu relâches les tensions accumulées." },
-      { title: "Relâchement final", cat: "repos", zone: "rest", min: 15, tip: "Allongé, immobile, respiration libre. Tu laisses retomber la pression." }
+      { title: "Respiration guidée", cat: "detox", zone: "rest", min: 10, tip: "Assis ou allongé, respiration lente, yeux fermés si tu veux.", actions: [
+        { label: "10 min assis ou allongé", detail: "Yeux fermés si tu veux.", pose: "breathe" }
+      ] },
+      { title: "Yoga / postures tenues", cat: "sport", zone: "mobility", min: 35, tip: "Postures tenues, respiration lente, tu relâches les tensions accumulées.", actions: [
+        { label: "Enchaînement de postures, 1-2 min chacune", detail: "Chat-vache, chien tête en bas, pigeon, torsion, enfant.", pose: "yoga" }
+      ] },
+      { title: "Relâchement final", cat: "repos", zone: "rest", min: 15, tip: "Allongé, immobile, respiration libre. Tu laisses retomber la pression.", actions: [
+        { label: "Allongé, immobile, respiration libre", detail: "Tu laisses retomber la pression.", pose: "breathe" }
+      ] }
     ]}
   ];
 
@@ -540,6 +636,93 @@
       '<div class="schema-row">' + donutSVG(totals) + schemaLegendHTML(totals) + '</div></div>';
   }
 
+  /* ---------------- exercise pictograms ---------------- */
+  var POSE_RIG = {
+    squat: { head: [30, 9, 6], lines: [[30, 16, 30, 33], [30, 19, 12, 25], [30, 19, 48, 25], [30, 33, 18, 45], [18, 45, 16, 57], [30, 33, 42, 45], [42, 45, 44, 57]] },
+    lunge: { head: [30, 10, 6], lines: [[30, 17, 30, 33], [30, 18, 18, 24], [30, 18, 42, 24], [30, 33, 18, 43], [18, 43, 14, 56], [30, 33, 46, 41], [46, 41, 54, 53]] },
+    pushup: { head: [10, 30, 6], lines: [[16, 33, 46, 33], [16, 33, 14, 49], [46, 33, 58, 37]] },
+    plank: { head: [10, 30, 6], lines: [[16, 33, 46, 33], [16, 33, 16, 45], [16, 45, 25, 47], [46, 33, 58, 38]] },
+    mountainclimber: { head: [10, 30, 6], lines: [[16, 33, 46, 33], [16, 33, 14, 49], [46, 33, 58, 37], [30, 33, 38, 22]] },
+    dip: { head: [20, 14, 6], lines: [[20, 21, 20, 37], [20, 22, 35, 33], [20, 37, 34, 39], [34, 39, 47, 34]] },
+    jumpingjack: { head: [30, 11, 6], lines: [[30, 18, 30, 35], [30, 18, 12, 6], [30, 18, 48, 6], [30, 35, 13, 54], [30, 35, 47, 54]] },
+    run: { head: [30, 9, 6], lines: [[30, 16, 30, 32], [30, 17, 18, 27], [30, 17, 41, 9], [30, 32, 19, 42], [19, 42, 23, 55], [30, 32, 43, 39], [43, 39, 51, 50]] },
+    walk: { head: [30, 9, 6], lines: [[30, 16, 30, 32], [30, 17, 22, 29], [30, 17, 39, 27], [30, 32, 22, 43], [22, 43, 20, 56], [30, 32, 38, 43], [38, 43, 42, 56]] },
+    stretch: { head: [38, 11, 6], lines: [[30, 35, 38, 17], [38, 17, 52, 4], [30, 35, 17, 29], [30, 35, 24, 56], [30, 35, 36, 56]] },
+    yoga: { head: [30, 14, 6], lines: [[30, 20, 30, 38], [30, 20, 20, 30], [30, 20, 40, 30], [30, 38, 14, 44], [14, 44, 24, 40], [30, 38, 46, 44], [46, 44, 36, 40]] }
+  };
+  var POSE_ICONS = {
+    drink: '<path d="M30 6 C20 22 14 34 14 41 A16 16 0 0 0 46 41 C46 34 40 22 30 6 Z" fill="{c}" opacity="0.85"></path>',
+    eat: '<circle cx="24" cy="34" r="15" fill="none" stroke="{c}" stroke-width="3.4"></circle>' +
+      '<line x1="47" y1="14" x2="47" y2="52" stroke="{c}" stroke-width="3.4" stroke-linecap="round"></line>' +
+      '<line x1="42" y1="14" x2="42" y2="26" stroke="{c}" stroke-width="2.6" stroke-linecap="round"></line>' +
+      '<line x1="52" y1="14" x2="52" y2="26" stroke="{c}" stroke-width="2.6" stroke-linecap="round"></line>',
+    note: '<rect x="14" y="9" width="32" height="42" rx="4" fill="none" stroke="{c}" stroke-width="3.2"></rect>' +
+      '<line x1="20" y1="20" x2="40" y2="20" stroke="{c}" stroke-width="3" stroke-linecap="round"></line>' +
+      '<line x1="20" y1="29" x2="40" y2="29" stroke="{c}" stroke-width="3" stroke-linecap="round"></line>' +
+      '<line x1="20" y1="38" x2="32" y2="38" stroke="{c}" stroke-width="3" stroke-linecap="round"></line>'
+  };
+  function poseSVG(type, colorVar, size) {
+    size = size || 30;
+    if (type === "breathe") {
+      return '<svg viewBox="0 0 60 60" width="' + size + '" height="' + size + '" aria-hidden="true">' +
+        '<circle cx="30" cy="30" r="7" fill="none" stroke="' + colorVar + '" stroke-width="3" opacity="0.9"></circle>' +
+        '<circle cx="30" cy="30" r="16" fill="none" stroke="' + colorVar + '" stroke-width="2.4" opacity="0.5"></circle>' +
+        '<circle cx="30" cy="30" r="25" fill="none" stroke="' + colorVar + '" stroke-width="2" opacity="0.28"></circle>' +
+        '</svg>';
+    }
+    if (POSE_ICONS[type]) {
+      return '<svg viewBox="0 0 60 60" width="' + size + '" height="' + size + '" aria-hidden="true">' +
+        POSE_ICONS[type].split("{c}").join(colorVar) + '</svg>';
+    }
+    var rig = POSE_RIG[type];
+    if (!rig) return "";
+    var s = '<svg viewBox="0 0 60 60" width="' + size + '" height="' + size + '" aria-hidden="true">';
+    rig.lines.forEach(function (l) {
+      s += '<line x1="' + l[0] + '" y1="' + l[1] + '" x2="' + l[2] + '" y2="' + l[3] + '" stroke="' + colorVar + '" stroke-width="5" stroke-linecap="round"></line>';
+    });
+    s += '<circle cx="' + rig.head[0] + '" cy="' + rig.head[1] + '" r="' + rig.head[2] + '" fill="' + colorVar + '"></circle>';
+    s += '</svg>';
+    return s;
+  }
+
+  function actionsListHTML(step) {
+    if (!step.actions || !step.actions.length) return "";
+    var html = '<div class="actions-list">';
+    step.actions.forEach(function (a) {
+      html += '<div class="action-row"><div class="a-icon">' + poseSVG(a.pose, CAT_COLOR[step.cat], 30) + '</div>' +
+        '<div class="a-text"><div class="a-label">' + a.label + '</div><div class="a-detail">' + a.detail + '</div></div></div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  var MOVE_GUIDE = [
+    ["squat", "Squat", "Fesses en arrière, dos droit, genoux dans l'axe des pieds."],
+    ["lunge", "Fente", "Descends jusqu'à ce que le genou arrière frôle le sol."],
+    ["pushup", "Pompe", "Corps gainé, coudes à 45°, poitrine proche du sol."],
+    ["plank", "Planche", "Corps aligné tête-talons, abdos et fessiers contractés."],
+    ["mountainclimber", "Circuit complet", "Enchaîne les exercices, genoux qui alternent vers la poitrine."],
+    ["dip", "Dips", "Coudes proches du corps, descends jusqu'à 90°."],
+    ["jumpingjack", "Jumping jack", "Écarte bras et jambes en sautant, retombe souplement."],
+    ["run", "Cardio / course", "Rythme soutenu, respiration régulière."],
+    ["walk", "Marche", "Rythme soutenu, bras qui bougent."],
+    ["stretch", "Étirement", "Amplitude progressive, jamais de douleur vive."],
+    ["yoga", "Posture tenue", "Respiration lente, tu tiens la position sans forcer."],
+    ["drink", "Hydratation", "Petites gorgées, régulièrement."],
+    ["eat", "Repas / collation", "Assis, sans écran, tu manges lentement."],
+    ["note", "Notes", "Trois lignes suffisent."],
+    ["breathe", "Respiration", "Inspire 4 secondes, expire 6 secondes."]
+  ];
+  function movementGuideHTML() {
+    var html = '<div class="panel"><div class="eyebrow" style="margin-bottom:12px;">Guide des mouvements</div><div class="guide-grid">';
+    MOVE_GUIDE.forEach(function (g) {
+      html += '<div class="guide-card">' + poseSVG(g[0], "var(--ember)", 34) +
+        '<div class="guide-name">' + g[1] + '</div><div class="guide-cue">' + g[2] + '</div></div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
   /* ---------------- title flash on tab ---------------- */
   var titleFlashTimer = null;
   function startTitleFlash() {
@@ -585,6 +768,7 @@
     html += '<div class="step-title">' + step.title + '</div>';
     html += '<div class="step-window">' + stepClockLabel(steps, st.index) + '</div>';
     html += '<div class="step-tip">' + step.tip + '</div>';
+    html += actionsListHTML(step);
     html += '<div class="nudge">' + (!st.running && !ready ? "En pause — reprends vite, le compteur ne t'attend pas" : '&nbsp;') + '</div>';
     html += '<div class="controls">';
     if (!ready) html += '<button class="btn btn-ghost" id="pauseBtn">' + (st.running ? 'Pause' : 'Reprendre') + '</button>';
@@ -793,6 +977,7 @@
     html += '</div>';
 
     html += schemaPanelHTML(STEPS, "Aperçu du programme · 18 étapes");
+    html += movementGuideHTML();
     html += weekLadderHTML(now, completed);
     html += flashSectionHTML();
     root.innerHTML = html;
@@ -832,6 +1017,7 @@
       html += statsIntroHTML();
       html += '</div>';
       html += schemaPanelHTML(STEPS, "Schéma de la journée");
+      html += movementGuideHTML();
       html += timelineHTML(STEPS, TOTAL_SEC, -1);
       html += stepListHTML(STEPS, -1);
       html += flashSectionHTML();
@@ -849,6 +1035,7 @@
       html += '<div class="controls"><button class="btn btn-primary" id="startBtn">Démarrer la séance</button></div>';
       html += '</div>';
       html += schemaPanelHTML(STEPS, "Schéma de la journée");
+      html += movementGuideHTML();
       html += timelineHTML(STEPS, TOTAL_SEC, -1);
       html += stepListHTML(STEPS, -1);
       html += flashSectionHTML();
