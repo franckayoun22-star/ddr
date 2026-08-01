@@ -1,0 +1,912 @@
+<title>LE PROGRAMME — Reset 10h/19h</title>
+<style>
+  :root {
+    --bg: #16110E;
+    --panel: #1F1915;
+    --panel-2: #241D18;
+    --ink: #F2EDE6;
+    --ink-dim: #B6ABA0;
+    --ink-faint: #8A7F74;
+    --ember: #FF5A1F;
+    --ember-dim: #C2431A;
+    --go: #8BD450;
+    --go-dim: #5C8A34;
+    --caution: #FFC245;
+    --line: rgba(242,237,230,0.14);
+    --shadow: rgba(0,0,0,0.45);
+    --ring-track: rgba(242,237,230,0.10);
+    --figure: rgba(242,237,230,0.16);
+  }
+  :root[data-theme="light"] {
+    --bg: #EFEAE2;
+    --panel: #FFFFFF;
+    --panel-2: #F7F1E8;
+    --ink: #1C1712;
+    --ink-dim: #5B5045;
+    --ink-faint: #8A7F70;
+    --ember: #D8430D;
+    --ember-dim: #B23709;
+    --go: #4B8A2E;
+    --go-dim: #386A21;
+    --caution: #A8710A;
+    --line: rgba(28,23,18,0.12);
+    --shadow: rgba(28,23,18,0.10);
+    --ring-track: rgba(28,23,18,0.08);
+    --figure: rgba(28,23,18,0.12);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #EFEAE2;
+      --panel: #FFFFFF;
+      --panel-2: #F7F1E8;
+      --ink: #1C1712;
+      --ink-dim: #5B5045;
+      --ink-faint: #8A7F70;
+      --ember: #D8430D;
+      --ember-dim: #B23709;
+      --go: #4B8A2E;
+      --go-dim: #386A21;
+      --caution: #A8710A;
+      --line: rgba(28,23,18,0.12);
+      --shadow: rgba(28,23,18,0.10);
+      --ring-track: rgba(28,23,18,0.08);
+      --figure: rgba(28,23,18,0.12);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(circle at 50% -10%, rgba(255,90,31,0.10), transparent 55%);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 28px) 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .display, .step-title, .cat-label, .eyebrow, .btn, .flash-title, .donut-total {
+    font-family: "Bahnschrift", "Segoe UI Semibold", "Arial Narrow", sans-serif;
+    font-stretch: condensed;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header.top .brand {
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  header.top .brand span { color: var(--ember); }
+  header.top .sub {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+  }
+  .theme-toggle {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .theme-toggle:hover { border-color: var(--ink-faint); color: var(--ink); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px var(--shadow);
+    padding: clamp(18px, 4vw, 30px);
+  }
+
+  /* ---- Hero: chronometer ---- */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .back-link {
+    align-self: flex-start;
+    background: transparent;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 0;
+    font-family: inherit;
+  }
+  .back-link:hover { color: var(--ink); }
+  .icon-row { display: flex; align-items: center; gap: 10px; }
+  .cat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+  .cat-sport { background: rgba(255,90,31,0.14); color: var(--ember); border-color: rgba(255,90,31,0.3); }
+  .cat-detox { background: rgba(139,212,80,0.14); color: var(--go); border-color: rgba(139,212,80,0.3); }
+  .cat-repos { background: rgba(255,194,69,0.14); color: var(--caution); border-color: rgba(255,194,69,0.3); }
+
+  .ring-wrap { position: relative; width: min(280px, 62vw); height: min(280px, 62vw); }
+  .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: var(--ring-track); stroke-width: 8; }
+  .ring-fill { fill: none; stroke: var(--ember); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.3s linear, stroke 0.3s ease; }
+  .ring-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
+  .clock {
+    font-family: "Consolas", "Cascadia Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(2.6rem, 9vw, 3.6rem);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .clock.ready { color: var(--go); animation: pulse 1.4s ease-in-out infinite; }
+  .clock-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+  @media (prefers-reduced-motion: reduce) { .clock.ready { animation: none; } }
+
+  .step-title {
+    font-size: clamp(1.35rem, 4.2vw, 2rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    max-width: 34ch;
+  }
+  .step-window { font-size: 0.85rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .step-tip { font-size: 0.98rem; color: var(--ink-dim); max-width: 46ch; line-height: 1.5; }
+
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+  .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 13px 26px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: transform 0.12s ease, opacity 0.12s ease, background 0.15s ease;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--ember); color: #1A0D06; }
+  .btn-primary:hover { background: var(--ember-dim); }
+  .btn-primary:disabled { background: var(--ring-track); color: var(--ink-faint); cursor: not-allowed; }
+  .btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--ink-dim); }
+  .btn-ghost:hover { border-color: var(--ink-faint); color: var(--ink); }
+  .btn-sm { padding: 9px 16px; font-size: 0.8rem; border-radius: 8px; }
+  .btn:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+
+  .nudge { font-size: 0.8rem; color: var(--caution); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; min-height: 1.1em; }
+
+  /* ---- Stats row ---- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; width: 100%; }
+  .stat { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .stat .n { font-family: "Consolas", ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 1.5rem; font-weight: 700; }
+  .stat .l { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); margin-top: 2px; }
+
+  /* ---- Schema / donut ---- */
+  .schema-row { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; }
+  .donut-wrap { position: relative; width: 148px; height: 148px; flex-shrink: 0; }
+  .donut-wrap svg { width: 100%; height: 100%; }
+  .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .donut-total { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .donut-total-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); }
+  .legend { display: flex; flex-direction: column; gap: 8px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .legend-min { color: var(--ink-faint); font-variant-numeric: tabular-nums; font-size: 0.78rem; margin-left: auto; }
+
+  /* ---- Race timeline ---- */
+  .timeline-scroll { overflow-x: auto; padding-bottom: 6px; }
+  .timeline { display: flex; gap: 3px; min-width: 560px; height: 34px; }
+  .seg { border-radius: 4px; position: relative; background: var(--ring-track); flex-shrink: 0; }
+  .seg.sport { background: rgba(255,90,31,0.22); }
+  .seg.detox { background: rgba(139,212,80,0.22); }
+  .seg.repos { background: rgba(255,194,69,0.22); }
+  .seg.done.sport { background: var(--ember); }
+  .seg.done.detox { background: var(--go); }
+  .seg.done.repos { background: var(--caution); }
+  .seg.current { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+  /* ---- Step list ---- */
+  .steplist { display: flex; flex-direction: column; gap: 2px; }
+  .srow {
+    display: grid;
+    grid-template-columns: 28px 1fr 34px auto;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 8px;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92rem;
+  }
+  .srow:last-child { border-bottom: none; }
+  .srow.locked { opacity: 0.45; }
+  .srow.current { background: rgba(255,90,31,0.07); border-radius: 8px; }
+  .srow .mark { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; border: 1.5px solid var(--line); color: var(--ink-faint); }
+  .srow.done .mark { background: var(--go); border-color: var(--go); color: #10250A; }
+  .srow.current .mark { background: var(--ember); border-color: var(--ember); color: #1A0D06; }
+  .srow .title { font-weight: 600; }
+  .srow .dia { display: flex; align-items: center; justify-content: center; }
+  .srow .meta { font-size: 0.75rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---- Week ladder ---- */
+  .week { display: flex; gap: 8px; flex-wrap: wrap; }
+  .day-pill {
+    flex: 1 1 140px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: var(--panel-2);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .day-pill .d { font-weight: 800; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.02em; }
+  .day-pill .date { font-size: 0.75rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .day-status { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800; padding: 2px 8px; border-radius: 999px; width: fit-content; margin-top: 2px; }
+  .st-upcoming { background: var(--ring-track); color: var(--ink-faint); }
+  .st-today { background: rgba(255,90,31,0.16); color: var(--ember); }
+  .st-done { background: rgba(139,212,80,0.16); color: var(--go); }
+  .st-missed { background: rgba(255,194,69,0.14); color: var(--caution); }
+
+  /* ---- Flash sessions ---- */
+  .flash-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .flash-count { font-size: 0.75rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .flash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .flash-card {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+  }
+  .flash-card-top { display: flex; align-items: center; gap: 10px; }
+  .flash-title { font-size: 1.02rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em; }
+  .flash-blurb { font-size: 0.82rem; color: var(--ink-dim); line-height: 1.4; flex-grow: 1; }
+  .flash-meta { font-size: 0.72rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+  .flash-status { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 999px; width: fit-content; }
+
+  .quote { font-size: 0.85rem; color: var(--ink-faint); font-style: italic; text-align: center; }
+
+  footer.credit { text-align: center; font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.04em; margin-top: 4px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brand">LE <span>PROGRAMME</span></div>
+      <div class="sub">Reset corps &amp; détox · 10h–19h</div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">Thème</button>
+  </header>
+
+  <div id="app"></div>
+
+  <div class="quote" id="quote"></div>
+  <footer class="credit">5 séances · 18 étapes · aucune case cochée sans le chrono</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SESSION_DATES = ["2026-08-03","2026-08-04","2026-08-06","2026-08-07","2026-08-08"];
+  var WINDOW_START_H = 10, WINDOW_START_M = 0;
+
+  var STEPS = [
+    { title: "Réveil corporel & hydratation", cat: "detox", zone: "rest", min: 20, tip: "Debout. Deux grands verres d'eau, un citron pressé dedans. Pas de café avant la fin de cette étape." },
+    { title: "Étirements dynamiques / mobilité", cat: "sport", zone: "mobility", min: 15, tip: "Chevilles, hanches, épaules. Amplitude progressive, tu réveilles les articulations avant l'effort." },
+    { title: "Cardio intense", cat: "sport", zone: "full", min: 45, tip: "Fréquence cardiaque haute tout du long. Course, corde à sauter, vélo — ce que tu as sous la main, à fond." },
+    { title: "Pause hydratation & respiration", cat: "repos", zone: "rest", min: 10, tip: "Un grand verre d'eau. 10 respirations lentes, nez, ventre qui se gonfle. Pouls qui redescend." },
+    { title: "Renforcement haut du corps", cat: "sport", zone: "upper", min: 45, tip: "Pompes, dips, tirages. Séries jusqu'à l'échec technique, pas jusqu'à l'abandon mental." },
+    { title: "Étirements + douche", cat: "repos", zone: "mobility", min: 15, tip: "Étire ce que tu viens de travailler. Douche fraîche en fin de séquence — ça réveille et ça draine." },
+    { title: "Déjeuner détox", cat: "detox", zone: "rest", min: 45, tip: "Légumes, protéine maigre, pas de sucre transformé, pas d'écran devant l'assiette. Mange lentement." },
+    { title: "Marche digestive extérieure", cat: "sport", zone: "full", min: 30, tip: "Dehors, pas de téléphone en main. Rythme soutenu, bras qui bougent, tu digères en avançant." },
+    { title: "Pause / respiration", cat: "repos", zone: "rest", min: 30, tip: "Assieds-toi, ferme les yeux si tu veux. Pas d'écran. C'est une vraie pause, pas un scroll." },
+    { title: "Renforcement bas du corps", cat: "sport", zone: "lower", min: 45, tip: "Squats, fentes, chaise. Jambes qui tremblent à la fin, c'est le signal que ça compte." },
+    { title: "Collation détox + hydratation", cat: "detox", zone: "rest", min: 15, tip: "Fruits frais ou oléagineux, un grand verre d'eau. Rien de transformé, rien de sucré." },
+    { title: "Cardio léger / marche rapide", cat: "sport", zone: "full", min: 45, tip: "Intensité modérée mais continue. Zone où tu peux encore parler mais pas chanter." },
+    { title: "Yoga / mobilité / relâchement", cat: "sport", zone: "mobility", min: 30, tip: "Postures tenues, respiration lente. Tu relâches les tensions accumulées dans la journée." },
+    { title: "Pause détox (infusion, fruits)", cat: "detox", zone: "rest", min: 15, tip: "Infusion sans sucre, fruits frais. Cinq minutes debout à la fenêtre, loin de l'écran." },
+    { title: "Circuit training complet", cat: "sport", zone: "full", min: 45, tip: "Corps entier, enchaîné, peu de repos entre les exercices. La dernière grosse dépense de la journée." },
+    { title: "Étirements finaux + douche", cat: "repos", zone: "mobility", min: 20, tip: "Étirements longs et lents sur tout le corps. Douche pour clore l'effort physique du jour." },
+    { title: "Préparation + dîner détox", cat: "detox", zone: "rest", min: 40, tip: "Cuisine léger : légumes, bonnes protéines. Prépare, mange assis, sans écran." },
+    { title: "Bilan du jour & planification lendemain", cat: "repos", zone: "rest", min: 30, tip: "Note ce qui a marché, ce qui a coincé. Prépare tes affaires de sport pour demain, maintenant." }
+  ];
+
+  var FLASH_SESSIONS = [
+    { id: "cardio", title: "Cardio Flash", icon: "full", blurb: "Monte le rythme, transpire, c'est tout.", steps: [
+      { title: "Échauffement articulaire", cat: "sport", zone: "mobility", min: 8, tip: "Chevilles, genoux, hanches, épaules — réveille les articulations avant de lancer le rythme." },
+      { title: "Cardio intense continu", cat: "sport", zone: "full", min: 35, tip: "Course, corde à sauter, vélo — à fond, sans t'arrêter jusqu'à la fin du chrono." },
+      { title: "Retour au calme + étirements", cat: "repos", zone: "mobility", min: 12, tip: "Ralentis progressivement, étire les jambes et le dos pendant que le pouls redescend." },
+      { title: "Hydratation", cat: "detox", zone: "rest", min: 5, tip: "Grand verre d'eau, quelques respirations lentes pour clore la séance." }
+    ]},
+    { id: "renfo", title: "Renfo Complet", icon: "upper", blurb: "Haut, bas, gainage. Le combo qui fait mal aux bons endroits.", steps: [
+      { title: "Mobilité générale", cat: "sport", zone: "mobility", min: 8, tip: "Rotations d'épaules, de hanches, de chevilles — tu prépares le terrain." },
+      { title: "Haut du corps", cat: "sport", zone: "upper", min: 20, tip: "Pompes, dips, tirages — séries jusqu'à l'échec technique, pas jusqu'à l'abandon mental." },
+      { title: "Bas du corps", cat: "sport", zone: "lower", min: 20, tip: "Squats, fentes, chaise — jambes qui tremblent à la fin, c'est le signal que ça compte." },
+      { title: "Gainage", cat: "sport", zone: "core", min: 7, tip: "Planche, gainage latéral — le tronc qui tient bon jusqu'au bout." },
+      { title: "Étirements", cat: "repos", zone: "mobility", min: 5, tip: "Étire tout ce que tu viens de travailler avant de t'arrêter." }
+    ]},
+    { id: "detox", title: "Reset Détox", icon: "rest", blurb: "Hydratation, marche, respiration. Léger mais efficace.", steps: [
+      { title: "Hydratation + respiration", cat: "detox", zone: "rest", min: 10, tip: "Grand verre d'eau, respiration lente et profonde, ventre qui se gonfle." },
+      { title: "Marche rapide extérieure", cat: "sport", zone: "full", min: 35, tip: "Dehors, pas de téléphone en main, rythme soutenu, bras qui bougent." },
+      { title: "Étirements doux", cat: "repos", zone: "mobility", min: 15, tip: "Étirements lents, sans forcer, sur tout le corps." }
+    ]},
+    { id: "mobilite", title: "Mobilité & Relâchement", icon: "mobility", blurb: "Zéro impact, tension qui part.", steps: [
+      { title: "Respiration guidée", cat: "detox", zone: "rest", min: 10, tip: "Assis ou allongé, respiration lente, yeux fermés si tu veux." },
+      { title: "Yoga / postures tenues", cat: "sport", zone: "mobility", min: 35, tip: "Postures tenues, respiration lente, tu relâches les tensions accumulées." },
+      { title: "Relâchement final", cat: "repos", zone: "rest", min: 15, tip: "Allongé, immobile, respiration libre. Tu laisses retomber la pression." }
+    ]}
+  ];
+
+  var CAT_LABEL = { sport: "Sport", detox: "Détox", repos: "Repos actif" };
+  var CAT_COLOR = { sport: "var(--ember)", detox: "var(--go)", repos: "var(--caution)" };
+  var QUOTES = [
+    "La motivation démarre l'action. Le chrono la termine.",
+    "Tu n'as pas besoin d'en avoir envie. Tu as besoin d'appuyer sur le bouton.",
+    "Une étape à la fois. Le chrono ne négocie pas.",
+    "Le corps suit la structure, même quand la tête traîne.",
+    "Chaque case cochée aujourd'hui pèse plus lourd que dix projets pour demain."
+  ];
+
+  function stepsTotalSec(steps) { return steps.reduce(function (s, st) { return s + st.min * 60; }, 0); }
+  function catTotals(steps) {
+    var t = { sport: 0, detox: 0, repos: 0 };
+    steps.forEach(function (s) { t[s.cat] += s.min; });
+    return t;
+  }
+  var TOTAL_SEC = stepsTotalSec(STEPS);
+
+  var root = document.getElementById("app");
+  var quoteEl = document.getElementById("quote");
+  quoteEl.textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+
+  var audioCtx = null;
+  function beep(freq, dur, vol) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = "sine";
+      o.frequency.value = freq;
+      g.gain.value = vol || 0.12;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur / 1000);
+      o.stop(audioCtx.currentTime + dur / 1000 + 0.02);
+    } catch (e) { /* audio unavailable, silent no-op */ }
+  }
+  function chime() { beep(880, 160, 0.13); setTimeout(function () { beep(1180, 220, 0.13); }, 140); }
+  function fanfare() {
+    [660, 880, 1100, 1320].forEach(function (f, i) {
+      setTimeout(function () { beep(f, 260, 0.13); }, i * 150);
+    });
+  }
+
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function fmtClock(sec) {
+    sec = Math.max(0, sec);
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    return h > 0 ? (h + ":" + pad(m) + ":" + pad(s)) : (pad(m) + ":" + pad(s));
+  }
+  function dateKey(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function stepClockLabel(steps, idx) {
+    var startMin = WINDOW_START_H * 60 + WINDOW_START_M;
+    for (var i = 0; i < idx; i++) startMin += steps[i].min;
+    var endMin = startMin + steps[idx].min;
+    var f = function (m) { return pad(Math.floor(m / 60) % 24) + "h" + pad(m % 60); };
+    return f(startMin) + " – " + f(endMin);
+  }
+  var WEEKDAY_FR = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+
+  function loadJSON(key, fallback) {
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+  }
+  function saveJSON(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+
+  function getState(key) { return loadJSON("reset:" + key, null); }
+  function setState(key, st) { saveJSON("reset:" + key, st); }
+  function getCompletedDates() { return loadJSON("reset:completed", []); }
+  function markCompleted(key) {
+    var list = getCompletedDates();
+    if (list.indexOf(key) === -1) { list.push(key); saveJSON("reset:completed", list); }
+  }
+  function getFlashCompletions() { return loadJSON("reset:flashCompletions", 0); }
+  function addFlashCompletion() { saveJSON("reset:flashCompletions", getFlashCompletions() + 1); }
+  function getActiveFlash() { try { return localStorage.getItem("reset:flashActive"); } catch (e) { return null; } }
+  function setActiveFlash(id) { try { if (id) localStorage.setItem("reset:flashActive", id); else localStorage.removeItem("reset:flashActive"); } catch (e) {} }
+
+  /* ---------------- diagrams ---------------- */
+  function bodyDiagram(zone, colorVar, size) {
+    size = size || 44;
+    if (zone === "rest") {
+      return '<svg viewBox="0 0 60 60" width="' + size + '" height="' + size + '" aria-hidden="true">' +
+        '<circle cx="30" cy="30" r="7" fill="none" stroke="' + colorVar + '" stroke-width="3" opacity="0.9"></circle>' +
+        '<circle cx="30" cy="30" r="16" fill="none" stroke="' + colorVar + '" stroke-width="2.4" opacity="0.5"></circle>' +
+        '<circle cx="30" cy="30" r="25" fill="none" stroke="' + colorVar + '" stroke-width="2" opacity="0.28"></circle>' +
+        '</svg>';
+    }
+    var neutral = "var(--figure)";
+    var torso = neutral, armL = neutral, armR = neutral, legL = neutral, legR = neutral;
+    var joints = false;
+    if (zone === "full") { torso = armL = armR = legL = legR = colorVar; }
+    else if (zone === "upper") { torso = armL = armR = colorVar; }
+    else if (zone === "lower") { legL = legR = colorVar; }
+    else if (zone === "core") { torso = colorVar; }
+    else if (zone === "mobility") { joints = true; }
+    var s = '<svg viewBox="0 0 60 84" width="' + size + '" height="' + (size * 84 / 60) + '" aria-hidden="true">';
+    s += '<circle cx="30" cy="12" r="9" fill="var(--panel-2)" stroke="var(--line)" stroke-width="1.4"></circle>';
+    s += '<rect x="18" y="24" width="24" height="28" rx="9" fill="' + torso + '" stroke="var(--line)" stroke-width="1.2"></rect>';
+    s += '<rect x="6" y="26" width="9" height="24" rx="4" fill="' + armL + '" stroke="var(--line)" stroke-width="1.2"></rect>';
+    s += '<rect x="45" y="26" width="9" height="24" rx="4" fill="' + armR + '" stroke="var(--line)" stroke-width="1.2"></rect>';
+    s += '<rect x="19" y="53" width="9" height="27" rx="4" fill="' + legL + '" stroke="var(--line)" stroke-width="1.2"></rect>';
+    s += '<rect x="32" y="53" width="9" height="27" rx="4" fill="' + legR + '" stroke="var(--line)" stroke-width="1.2"></rect>';
+    if (joints) {
+      [[10, 28], [50, 28], [23, 55], [37, 55]].forEach(function (p) {
+        s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.2" fill="' + colorVar + '"></circle>';
+      });
+    }
+    s += '</svg>';
+    return s;
+  }
+
+  function donutSVG(totals, size) {
+    size = size || 148;
+    var total = totals.sport + totals.detox + totals.repos;
+    var r = 54, C = 2 * Math.PI * r, acc = 0;
+    var order = [["sport", totals.sport], ["detox", totals.detox], ["repos", totals.repos]];
+    var arcs = "";
+    order.forEach(function (pair) {
+      var min = pair[1];
+      if (min <= 0) return;
+      var len = (min / total) * C;
+      arcs += '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="' + CAT_COLOR[pair[0]] + '" stroke-width="15" ' +
+        'stroke-dasharray="' + len + ' ' + (C - len) + '" stroke-dashoffset="' + (-acc) + '"></circle>';
+      acc += len;
+    });
+    var h = Math.floor(total / 60), m = total % 60;
+    return '<div class="donut-wrap" style="width:' + size + 'px;height:' + size + 'px;">' +
+      '<svg viewBox="0 0 140 140"><g transform="rotate(-90 70 70)">' +
+      '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="var(--ring-track)" stroke-width="15"></circle>' +
+      arcs + '</g></svg>' +
+      '<div class="donut-center"><div class="donut-total">' + (h > 0 ? h + "h" + pad(m) : m + "min") + '</div><div class="donut-total-label">Total</div></div>' +
+      '</div>';
+  }
+
+  function schemaLegendHTML(totals) {
+    var rows = [["sport", "Sport"], ["detox", "Détox"], ["repos", "Repos actif"]];
+    var html = '<div class="legend">';
+    rows.forEach(function (r) {
+      var min = totals[r[0]];
+      var h = Math.floor(min / 60), m = min % 60;
+      html += '<div class="legend-row"><span class="legend-dot" style="background:' + CAT_COLOR[r[0]] + '"></span>' +
+        '<span>' + r[1] + '</span><span class="legend-min">' + (h > 0 ? h + "h" + pad(m) : m + "min") + '</span></div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function schemaPanelHTML(steps, eyebrowText) {
+    var totals = catTotals(steps);
+    return '<div class="panel"><div class="eyebrow" style="margin-bottom:14px;">' + eyebrowText + '</div>' +
+      '<div class="schema-row">' + donutSVG(totals) + schemaLegendHTML(totals) + '</div></div>';
+  }
+
+  /* ---------------- title flash on tab ---------------- */
+  var titleFlashTimer = null;
+  function startTitleFlash() {
+    if (titleFlashTimer || !document.hidden) return;
+    var on = false;
+    titleFlashTimer = setInterval(function () {
+      document.title = on ? "LE PROGRAMME" : "⏱ Étape terminée !";
+      on = !on;
+    }, 900);
+  }
+  function stopTitleFlash() {
+    if (titleFlashTimer) { clearInterval(titleFlashTimer); titleFlashTimer = null; }
+    document.title = "LE PROGRAMME";
+  }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) stopTitleFlash(); });
+
+  var lastReadyKey = null;
+
+  /* ---------------- shared active-step hero ---------------- */
+  function activeStepHeroHTML(steps, stateKey, st, readyKeyTag) {
+    var step = steps[st.index];
+    var remaining = st.running ? Math.ceil((st.deadline - Date.now()) / 1000) : st.frozenRemaining;
+    remaining = Math.max(0, remaining);
+    var ready = remaining <= 0;
+
+    if (ready && lastReadyKey !== readyKeyTag) {
+      lastReadyKey = readyKeyTag;
+      chime();
+      if (document.hidden) startTitleFlash();
+    }
+
+    var total = step.min * 60;
+    var frac = total > 0 ? (total - remaining) / total : 1;
+    var R = 122, C = 2 * Math.PI * R;
+    var offset = C * (1 - frac);
+
+    var html = '<div class="icon-row">' + bodyDiagram(step.zone, CAT_COLOR[step.cat], 40) +
+      '<span class="cat-chip cat-' + step.cat + '">' + CAT_LABEL[step.cat] + ' · Étape ' + (st.index + 1) + '/' + steps.length + '</span></div>';
+    html += '<div class="ring-wrap"><svg viewBox="0 0 260 260">' +
+      '<circle class="ring-track" cx="130" cy="130" r="' + R + '"></circle>' +
+      '<circle class="ring-fill" cx="130" cy="130" r="' + R + '" style="stroke:' + (ready ? 'var(--go)' : 'var(--ember)') + ';stroke-dasharray:' + C + ';stroke-dashoffset:' + offset + '"></circle>' +
+      '</svg><div class="ring-center"><div class="clock' + (ready ? ' ready' : '') + '">' + fmtClock(remaining) + '</div><div class="clock-label">' + (ready ? 'terminé' : (st.running ? 'en cours' : 'en pause')) + '</div></div></div>';
+    html += '<div class="step-title">' + step.title + '</div>';
+    html += '<div class="step-window">' + stepClockLabel(steps, st.index) + '</div>';
+    html += '<div class="step-tip">' + step.tip + '</div>';
+    html += '<div class="nudge">' + (!st.running && !ready ? "En pause — reprends vite, le compteur ne t'attend pas" : '&nbsp;') + '</div>';
+    html += '<div class="controls">';
+    if (!ready) html += '<button class="btn btn-ghost" id="pauseBtn">' + (st.running ? 'Pause' : 'Reprendre') + '</button>';
+    html += '<button class="btn btn-primary" id="nextBtn" ' + (ready ? '' : 'disabled') + '>' +
+      (st.index === steps.length - 1 ? 'Terminer' : 'Étape suivante') + '</button>';
+    html += '</div>';
+    return { html: html, ready: ready, remaining: remaining, total: total, step: step };
+  }
+
+  function bindActiveStepHero(steps, stateKey, st, onDone) {
+    var remaining = st.running ? Math.ceil((st.deadline - Date.now()) / 1000) : st.frozenRemaining;
+    var ready = Math.max(0, remaining) <= 0;
+    if (!ready) {
+      var pb = document.getElementById("pauseBtn");
+      if (pb) pb.addEventListener("click", function () {
+        if (st.running) {
+          st.frozenRemaining = Math.max(0, Math.ceil((st.deadline - Date.now()) / 1000));
+          st.running = false;
+        } else {
+          st.deadline = Date.now() + st.frozenRemaining * 1000;
+          st.running = true;
+        }
+        setState(stateKey, st);
+        render();
+      });
+    }
+    var nb = document.getElementById("nextBtn");
+    if (ready && nb) {
+      nb.addEventListener("click", function () {
+        stopTitleFlash();
+        lastReadyKey = null;
+        var nextIdx = st.index + 1;
+        if (nextIdx >= steps.length) {
+          onDone();
+        } else {
+          setState(stateKey, { index: nextIdx, deadline: Date.now() + steps[nextIdx].min * 60000, running: true, frozenRemaining: null });
+        }
+        render();
+      });
+    }
+  }
+
+  function timelineHTML(steps, total, currentIdx) {
+    var html = '<div class="panel"><div class="eyebrow" style="margin-bottom:10px;">Parcours</div><div class="timeline-scroll"><div class="timeline">';
+    steps.forEach(function (step, i) {
+      var w = (step.min * 60 / total) * 100;
+      var done = i < currentIdx, isCurrent = i === currentIdx;
+      html += '<div class="seg ' + step.cat + (done ? ' done' : '') + (isCurrent ? ' current' : '') +
+        '" style="width:' + w + '%" title="' + step.title + ' (' + step.min + ' min)"></div>';
+    });
+    html += '</div></div></div>';
+    return html;
+  }
+
+  function stepListHTML(steps, currentIdx) {
+    var html = '<div class="panel"><div class="eyebrow" style="margin-bottom:6px;">Détail des étapes</div><div class="steplist">';
+    steps.forEach(function (step, i) {
+      var state = i < currentIdx ? "done" : (i === currentIdx ? "current" : "locked");
+      html += '<div class="srow ' + state + '">';
+      html += '<div class="mark">' + (state === "done" ? "✓" : (i + 1)) + '</div>';
+      html += '<div><div class="title">' + step.title + '</div></div>';
+      html += '<div class="dia">' + bodyDiagram(step.zone, CAT_COLOR[step.cat], 22) + '</div>';
+      html += '<div class="meta">' + stepClockLabel(steps, i) + ' · ' + step.min + ' min</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  function statsIntroHTML() {
+    return '<div class="stats" style="margin-top:6px;">' +
+      '<div class="stat"><div class="n">18</div><div class="l">Étapes</div></div>' +
+      '<div class="stat"><div class="n">5h00</div><div class="l">Sport</div></div>' +
+      '<div class="stat"><div class="n">2h15</div><div class="l">Détox</div></div>' +
+      '<div class="stat"><div class="n">1h45</div><div class="l">Repos actif</div></div>' +
+      '</div>';
+  }
+
+  function statsRowHTML(idx, total, remaining, steps, totalSec) {
+    var elapsedBefore = 0;
+    for (var i = 0; i < idx; i++) elapsedBefore += steps[i].min * 60;
+    var elapsedNow = elapsedBefore + (total - remaining);
+    var pctDay = Math.min(100, Math.round((elapsedNow / totalSec) * 100));
+    return '<div class="stats">' +
+      '<div class="stat"><div class="n">' + idx + '/' + steps.length + '</div><div class="l">Étapes faites</div></div>' +
+      '<div class="stat"><div class="n">' + pctDay + '%</div><div class="l">Séance</div></div>' +
+      '<div class="stat"><div class="n">' + fmtClock(totalSec - elapsedNow) + '</div><div class="l">Restant</div></div>' +
+      '</div>';
+  }
+
+  /* ---------------- flash sessions ---------------- */
+  function findFlash(id) {
+    for (var i = 0; i < FLASH_SESSIONS.length; i++) if (FLASH_SESSIONS[i].id === id) return FLASH_SESSIONS[i];
+    return null;
+  }
+
+  function flashSectionHTML() {
+    var count = getFlashCompletions();
+    var html = '<div class="panel"><div class="flash-head"><div class="eyebrow" style="margin-bottom:0;">Séances flash · 1h, quand tu veux</div>' +
+      '<div class="flash-count">' + count + ' séance' + (count === 1 ? '' : 's') + ' flash bouclée' + (count === 1 ? '' : 's') + '</div></div>' +
+      '<div class="flash-grid">';
+    FLASH_SESSIONS.forEach(function (session) {
+      var st = getState("flash:" + session.id);
+      var statusLabel, statusCls, btnLabel;
+      if (!st) { statusLabel = "Nouveau"; statusCls = "st-upcoming"; btnLabel = "Démarrer"; }
+      else if (st.index >= session.steps.length) { statusLabel = "Terminée"; statusCls = "st-done"; btnLabel = "Refaire"; }
+      else { statusLabel = "Étape " + (st.index + 1) + "/" + session.steps.length; statusCls = "st-today"; btnLabel = "Reprendre"; }
+      html += '<div class="flash-card">' +
+        '<div class="flash-card-top">' + bodyDiagram(session.icon, "var(--ember)", 36) + '<div class="flash-title">' + session.title + '</div></div>' +
+        '<div class="flash-blurb">' + session.blurb + '</div>' +
+        '<div class="flash-meta">' + session.steps.length + ' étapes · 60 min</div>' +
+        '<div class="day-status ' + statusCls + '">' + statusLabel + '</div>' +
+        '<button class="btn btn-primary btn-sm" data-flash="' + session.id + '">' + btnLabel + '</button>' +
+        '</div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  function bindFlashSection() {
+    var btns = root.querySelectorAll("[data-flash]");
+    btns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-flash");
+        var session = findFlash(id);
+        var st = getState("flash:" + id);
+        if (!st || st.index >= session.steps.length) {
+          st = { index: 0, deadline: Date.now() + session.steps[0].min * 60000, running: true, frozenRemaining: null };
+          setState("flash:" + id, st);
+        }
+        setActiveFlash(id);
+        render();
+      });
+    });
+  }
+
+  function renderFlashActive(id) {
+    var session = findFlash(id);
+    var stateKey = "flash:" + id;
+    var st = getState(stateKey);
+    var html = "";
+
+    if (!st || st.index >= session.steps.length) {
+      html += '<div class="panel hero">';
+      html += '<button class="back-link" id="backBtn">← Toutes les séances</button>';
+      html += '<div class="cat-chip" style="background:rgba(139,212,80,0.16);color:var(--go);border-color:rgba(139,212,80,0.35);">Séance flash terminée</div>';
+      html += '<div class="step-title">' + session.title + ' — fait.</div>';
+      html += '<div class="step-tip">' + getFlashCompletions() + ' séance' + (getFlashCompletions() === 1 ? '' : 's') + ' flash bouclée' + (getFlashCompletions() === 1 ? '' : 's') + ' au total.</div>';
+      html += '</div>';
+      html += timelineHTML(session.steps, stepsTotalSec(session.steps), session.steps.length);
+      root.innerHTML = html + flashSectionHTML();
+      document.getElementById("backBtn").addEventListener("click", function () { setActiveFlash(null); render(); });
+      bindFlashSection();
+      return;
+    }
+
+    var hero = activeStepHeroHTML(session.steps, stateKey, st, "flash:" + id + ":" + st.index);
+    html += '<div class="panel hero">';
+    html += '<button class="back-link" id="backBtn">← Toutes les séances</button>';
+    html += hero.html;
+    html += '</div>';
+    html += statsRowHTML(st.index, hero.total, hero.remaining, session.steps, stepsTotalSec(session.steps));
+    html += timelineHTML(session.steps, stepsTotalSec(session.steps), st.index);
+    html += stepListHTML(session.steps, st.index);
+    root.innerHTML = html;
+    document.getElementById("backBtn").addEventListener("click", function () { setActiveFlash(null); render(); });
+    bindActiveStepHero(session.steps, stateKey, st, function () {
+      setState(stateKey, { index: session.steps.length, deadline: null, running: false, frozenRemaining: 0 });
+      addFlashCompletion();
+      fanfare();
+    });
+  }
+
+  /* ---------------- main day flow ---------------- */
+  function render() {
+    var activeFlash = getActiveFlash();
+    if (activeFlash && findFlash(activeFlash)) { renderFlashActive(activeFlash); return; }
+
+    var now = new Date();
+    var todayKey = dateKey(now);
+    var isSessionDay = SESSION_DATES.indexOf(todayKey) !== -1;
+    var completed = getCompletedDates();
+
+    if (isSessionDay) renderSessionDay(todayKey, now, completed);
+    else renderOverview(now, completed);
+  }
+
+  function renderOverview(now, completed) {
+    var upcoming = SESSION_DATES.filter(function (d) { return d >= dateKey(now); });
+    var next = upcoming[0];
+    var html = "";
+
+    html += '<div class="panel hero">';
+    html += '<div class="eyebrow">Prochaine séance</div>';
+    if (next) {
+      var nd = new Date(next + "T" + pad(WINDOW_START_H) + ":00:00");
+      var diff = Math.max(0, Math.floor((nd - now) / 1000));
+      var days = Math.floor(diff / 86400), hrs = Math.floor((diff % 86400) / 3600), mins = Math.floor((diff % 3600) / 60);
+      html += '<div class="step-title">' + WEEKDAY_FR[nd.getDay()] + ' ' + nd.getDate() + '/' + pad(nd.getMonth() + 1) + '</div>';
+      html += '<div class="clock">' + (days > 0 ? days + 'j ' : '') + pad(hrs) + ':' + pad(mins) + '</div>';
+      html += '<div class="clock-label">avant le début — 10h00</div>';
+    } else {
+      html += '<div class="step-title">Semaine terminée</div>';
+      html += '<div class="step-tip">Les 5 séances sont passées. ' + completed.filter(function (d) { return SESSION_DATES.indexOf(d) !== -1; }).length + '/5 terminées.</div>';
+    }
+    html += '</div>';
+
+    html += schemaPanelHTML(STEPS, "Aperçu du programme · 18 étapes");
+    html += weekLadderHTML(now, completed);
+    html += flashSectionHTML();
+    root.innerHTML = html;
+    bindFlashSection();
+  }
+
+  function weekLadderHTML(now, completed) {
+    var todayKey = dateKey(now);
+    var html = '<div class="panel"><div class="eyebrow" style="margin-bottom:12px;">Semaine · 5 séances</div><div class="week">';
+    SESSION_DATES.forEach(function (dstr) {
+      var d = new Date(dstr + "T12:00:00");
+      var status, cls;
+      if (completed.indexOf(dstr) !== -1) { status = "Terminée"; cls = "st-done"; }
+      else if (dstr === todayKey) { status = "Aujourd'hui"; cls = "st-today"; }
+      else if (dstr < todayKey) { status = "Manquée"; cls = "st-missed"; }
+      else { status = "À venir"; cls = "st-upcoming"; }
+      html += '<div class="day-pill"><div class="d">' + WEEKDAY_FR[d.getDay()] + '</div>' +
+        '<div class="date">' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '</div>' +
+        '<div class="day-status ' + cls + '">' + status + '</div></div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderSessionDay(todayKey, now, completed) {
+    var winStart = new Date(now); winStart.setHours(WINDOW_START_H, WINDOW_START_M, 0, 0);
+    var st = getState(todayKey);
+    var html = "";
+
+    if (now < winStart && !st) {
+      var diff = Math.floor((winStart - now) / 1000);
+      html += '<div class="panel hero">';
+      html += '<div class="cat-chip cat-sport">Aujourd\'hui · Séance</div>';
+      html += '<div class="step-title">La séance commence à 10h00</div>';
+      html += '<div class="clock">' + fmtClock(diff) + '</div>';
+      html += '<div class="clock-label">avant l\'ouverture du programme</div>';
+      html += statsIntroHTML();
+      html += '</div>';
+      html += schemaPanelHTML(STEPS, "Schéma de la journée");
+      html += timelineHTML(STEPS, TOTAL_SEC, -1);
+      html += stepListHTML(STEPS, -1);
+      html += flashSectionHTML();
+      root.innerHTML = html;
+      bindFlashSection();
+      return;
+    }
+
+    if (!st) {
+      html += '<div class="panel hero">';
+      html += '<div class="cat-chip cat-sport">Aujourd\'hui · Séance</div>';
+      html += '<div class="step-title">18 étapes. 9 heures. Zéro échappatoire.</div>';
+      html += '<div class="step-tip">Chaque étape a son propre chrono. Le bouton "étape suivante" reste bloqué tant qu\'il tourne — pas de saut, pas de raccourci.</div>';
+      html += statsIntroHTML();
+      html += '<div class="controls"><button class="btn btn-primary" id="startBtn">Démarrer la séance</button></div>';
+      html += '</div>';
+      html += schemaPanelHTML(STEPS, "Schéma de la journée");
+      html += timelineHTML(STEPS, TOTAL_SEC, -1);
+      html += stepListHTML(STEPS, -1);
+      html += flashSectionHTML();
+      root.innerHTML = html;
+      document.getElementById("startBtn").addEventListener("click", function () {
+        setState(todayKey, { index: 0, deadline: Date.now() + STEPS[0].min * 60000, running: true, frozenRemaining: null });
+        render();
+      });
+      bindFlashSection();
+      return;
+    }
+
+    if (st.index >= STEPS.length) {
+      markCompleted(todayKey);
+      var doneCount = getCompletedDates().filter(function (d) { return SESSION_DATES.indexOf(d) !== -1; }).length;
+      html += '<div class="panel hero">';
+      html += '<div class="cat-chip" style="background:rgba(139,212,80,0.16);color:var(--go);border-color:rgba(139,212,80,0.35);">Journée terminée</div>';
+      html += '<div class="step-title">18/18. Fait. Pour de vrai.</div>';
+      html += '<div class="step-tip">' + doneCount + ' / 5 séances de la semaine terminées. Demain c\'est un autre jour, mais celui-ci est déjà gagné.</div>';
+      html += '</div>';
+      html += timelineHTML(STEPS, TOTAL_SEC, STEPS.length);
+      html += stepListHTML(STEPS, STEPS.length);
+      html += weekLadderHTML(now, getCompletedDates());
+      html += flashSectionHTML();
+      root.innerHTML = html;
+      bindFlashSection();
+      return;
+    }
+
+    var hero = activeStepHeroHTML(STEPS, todayKey, st, todayKey + ":" + st.index);
+    html += '<div class="panel hero">' + hero.html + '</div>';
+    html += statsRowHTML(st.index, hero.total, hero.remaining, STEPS, TOTAL_SEC);
+    html += timelineHTML(STEPS, TOTAL_SEC, st.index);
+    html += stepListHTML(STEPS, st.index);
+    html += flashSectionHTML();
+    root.innerHTML = html;
+    bindActiveStepHero(STEPS, todayKey, st, function () {
+      setState(todayKey, { index: STEPS.length, deadline: null, running: false, frozenRemaining: 0 });
+    });
+    bindFlashSection();
+  }
+
+  var themeBtn = document.getElementById("themeToggle");
+  function applyStoredTheme() {
+    var t = localStorage.getItem("reset:theme");
+    if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+  }
+  applyStoredTheme();
+  themeBtn.addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var effectiveCur = cur || (prefersDark ? "dark" : "light");
+    var next = effectiveCur === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("reset:theme", next);
+  });
+
+  render();
+  setInterval(render, 1000);
+})();
+</script>
